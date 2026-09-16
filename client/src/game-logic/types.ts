@@ -14,3 +14,9 @@ export interface Piece {
 // Une case vide vaut `null`, sinon elle contient une Piece.
 // plateau[0] = ligne du haut (les noirs au depart), plateau[7] = ligne du bas (les blancs).
 export type Plateau = (Piece | null)[][];
+
+// Une case du plateau, reperee par sa ligne (0-7) et sa colonne (0-7)
+export interface Position {
+  ligne: number;
+  colonne: number;
+}
