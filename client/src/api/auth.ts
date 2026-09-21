@@ -8,10 +8,10 @@ export interface AuthResponse {
   user: User;
 }
 
-export function signup(email: string, password: string, profilePicture?: string) {
+export function signup(email: string, password: string) {
   return apiFetch<AuthResponse>("/auth/signup", {
     method: "POST",
-    body: { email, password, profilePicture },
+    body: { email, password },
   });
 }
 
