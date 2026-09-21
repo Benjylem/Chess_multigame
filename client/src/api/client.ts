@@ -18,6 +18,11 @@ interface RequestOptions {
   token?: string | null;
 }
 
+// La forme d'une reponse d'erreur envoyee par le backend : { "error": "message" }
+interface ReponseErreur {
+  error: string;
+}
+
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, token } = options;
 
@@ -28,10 +33,15 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     headers["Authorization"] = `Bearer ${token}`;
   }
 
+  let corpsEnvoye: string | undefined;
+  if (body !== undefined) {
+    corpsEnvoye = JSON.stringify(body);
+  }
+
   const response = await fetch(`${BASE_URL}${path}`, {
     method,
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: corpsEnvoye,
   });
 
   if (response.status === 204) {
@@ -41,9 +51,10 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const message = data && typeof data === "object" && "error" in data
-      ? String((data as { error: unknown }).error)
-      : `Erreur HTTP ${response.status}`;
+    let message = `Erreur HTTP ${response.status}`;
+    if (data && typeof data === "object" && "error" in data) {
+      message = String((data as ReponseErreur).error);
+    }
     throw new ApiError(response.status, message);
   }
 

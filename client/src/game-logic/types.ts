@@ -20,3 +20,10 @@ export interface Position {
   ligne: number;
   colonne: number;
 }
+
+// Un deplacement relatif : de combien de lignes et de colonnes on se decale.
+// Sert a decrire les directions ou les sauts possibles d'une piece.
+export interface Deplacement {
+  dLigne: number;
+  dColonne: number;
+}

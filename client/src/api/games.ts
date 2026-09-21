@@ -20,11 +20,14 @@ export function inviteToGame(token: string, gameId: number, email: string) {
   });
 }
 
-export function startGame(
-  token: string,
-  gameId: number,
-  options?: { state?: string; currentTurnUserId?: number },
-) {
+// Ce qu'on peut envoyer pour demarrer une partie : un etat de depart optionnel,
+// et qui commence a jouer (le createur par defaut si non precise)
+interface OptionsDemarrage {
+  state?: string;
+  currentTurnUserId?: number;
+}
+
+export function startGame(token: string, gameId: number, options?: OptionsDemarrage) {
   return apiFetch<Game>(`/games/${gameId}/start`, {
     method: "POST",
     token,
@@ -44,13 +47,13 @@ export function getGame(token: string, gameId: number) {
   return apiFetch<Game>(`/games/${gameId}`, { token });
 }
 
-export function updateGameState(
-  token: string,
-  gameId: number,
-  body:
-    | { state: string; currentTurnUserId: number }
-    | { state: string; ended: true; endData: string },
-) {
+// Deux facons de mettre a jour une partie : soit on continue (on precise qui
+// joue le prochain tour), soit on la termine (avec le resultat dans endData)
+type CorpsMiseAJourEtat =
+  | { state: string; currentTurnUserId: number }
+  | { state: string; ended: true; endData: string };
+
+export function updateGameState(token: string, gameId: number, body: CorpsMiseAJourEtat) {
   return apiFetch<Game>(`/games/${gameId}/state`, {
     method: "PUT",
     token,

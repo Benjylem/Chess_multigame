@@ -33,7 +33,9 @@ const STORAGE_KEY = "chess-multigame-auth";
 
 function loadInitialState(): AuthState {
   const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return { token: null, user: null };
+  if (!raw) {
+    return { token: null, user: null };
+  }
   try {
     return JSON.parse(raw) as AuthState;
   } catch {
@@ -64,6 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth doit être utilisé à l'intérieur d'un <AuthProvider>");
+  if (!ctx) {
+    throw new Error("useAuth doit être utilisé à l'intérieur d'un <AuthProvider>");
+  }
   return ctx;
 }

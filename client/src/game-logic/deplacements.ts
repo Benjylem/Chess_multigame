@@ -1,4 +1,4 @@
-import type { Piece, Plateau, Position } from "./types";
+import type { Deplacement, Piece, Plateau, Position } from "./types";
 import { getPieceA } from "./board";
 
 // Verifie qu'une case existe bien sur un plateau de 8x8
@@ -7,7 +7,7 @@ function estSurLePlateau(ligne: number, colonne: number): boolean {
 }
 
 // Les 4 directions "droites" (utilisees par la tour, et la dame)
-const DIRECTIONS_TOUR = [
+const DIRECTIONS_TOUR: Deplacement[] = [
   { dLigne: -1, dColonne: 0 }, // vers le haut
   { dLigne: 1, dColonne: 0 }, // vers le bas
   { dLigne: 0, dColonne: -1 }, // vers la gauche
@@ -15,7 +15,7 @@ const DIRECTIONS_TOUR = [
 ];
 
 // Les 4 directions "diagonales" (utilisees par le fou, et la dame)
-const DIRECTIONS_FOU = [
+const DIRECTIONS_FOU: Deplacement[] = [
   { dLigne: -1, dColonne: -1 },
   { dLigne: -1, dColonne: 1 },
   { dLigne: 1, dColonne: -1 },
@@ -23,7 +23,7 @@ const DIRECTIONS_FOU = [
 ];
 
 // Les 8 sauts possibles du cavalier (en "L")
-const SAUTS_CAVALIER = [
+const SAUTS_CAVALIER: Deplacement[] = [
   { dLigne: -2, dColonne: -1 },
   { dLigne: -2, dColonne: 1 },
   { dLigne: -1, dColonne: -2 },
@@ -42,7 +42,7 @@ function getMouvementsGlissants(
   plateau: Plateau,
   depart: Position,
   piece: Piece,
-  directions: { dLigne: number; dColonne: number }[],
+  directions: Deplacement[],
 ): Position[] {
   const mouvements: Position[] = [];
 
@@ -79,7 +79,7 @@ function getMouvementsFixes(
   plateau: Plateau,
   depart: Position,
   piece: Piece,
-  deplacements: { dLigne: number; dColonne: number }[],
+  deplacements: Deplacement[],
 ): Position[] {
   const mouvements: Position[] = [];
 
@@ -87,7 +87,9 @@ function getMouvementsFixes(
     const ligne = depart.ligne + deplacement.dLigne;
     const colonne = depart.colonne + deplacement.dColonne;
 
-    if (!estSurLePlateau(ligne, colonne)) continue;
+    if (!estSurLePlateau(ligne, colonne)) {
+      continue;
+    }
 
     const pieceRencontree = getPieceA(plateau, ligne, colonne);
     // on peut aller sur une case vide, ou prendre une piece adverse
@@ -107,8 +109,15 @@ function getMouvementsPion(plateau: Plateau, depart: Position, piece: Piece): Po
 
   // Les blancs avancent vers le haut du plateau (ligne qui diminue),
   // les noirs avancent vers le bas (ligne qui augmente).
-  const direction = piece.couleur === "blanc" ? -1 : 1;
-  const ligneDeDepart = piece.couleur === "blanc" ? 6 : 1;
+  let direction: number;
+  let ligneDeDepart: number;
+  if (piece.couleur === "blanc") {
+    direction = -1;
+    ligneDeDepart = 6;
+  } else {
+    direction = 1;
+    ligneDeDepart = 1;
+  }
 
   const uneCaseDevant = depart.ligne + direction;
 
@@ -130,7 +139,9 @@ function getMouvementsPion(plateau: Plateau, depart: Position, piece: Piece): Po
   // captures en diagonale, seulement si une piece adverse s'y trouve
   for (const dColonne of [-1, 1]) {
     const colonneCapture = depart.colonne + dColonne;
-    if (!estSurLePlateau(uneCaseDevant, colonneCapture)) continue;
+    if (!estSurLePlateau(uneCaseDevant, colonneCapture)) {
+      continue;
+    }
 
     const pieceAdverse = getPieceA(plateau, uneCaseDevant, colonneCapture);
     if (pieceAdverse && pieceAdverse.couleur !== piece.couleur) {
@@ -146,7 +157,9 @@ function getMouvementsPion(plateau: Plateau, depart: Position, piece: Piece): Po
 // roi en echec (ce sera fait dans regles.ts).
 export function getMouvementsPossibles(plateau: Plateau, depart: Position): Position[] {
   const piece = getPieceA(plateau, depart.ligne, depart.colonne);
-  if (!piece) return [];
+  if (!piece) {
+    return [];
+  }
 
   switch (piece.type) {
     case "pion":
