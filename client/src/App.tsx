@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { TestPlateau } from './dev/TestPlateau'
 
 // Placeholders temporaires : les vraies pages (Lot 1 = auth, Lot 2 = lobby/historique,
 // Lot 3 = plateau) seront ajoutées dans src/pages/ sur leurs branches respectives et
@@ -16,6 +17,9 @@ function App() {
       <Routes>
         <Route path="/login" element={<Placeholder label="Connexion" />} />
         <Route path="/signup" element={<Placeholder label="Créer un compte" />} />
+
+        {/* Route de dev temporaire, a retirer une fois GamePage pret (voir src/dev/) */}
+        <Route path="/test-echecs" element={<TestPlateau />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Placeholder label="Parties en cours" />} />
