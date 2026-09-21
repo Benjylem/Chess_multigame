@@ -2,6 +2,9 @@ import { Routes, Route } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { TestPlateau } from './dev/TestPlateau'
+import { LoginPage } from './pages/LoginPage'
+import { SignupPage } from './pages/SignupPage'
+import './App.css'
 
 // Placeholders temporaires : les vraies pages (Lot 1 = auth, Lot 2 = lobby/historique,
 // Lot 3 = plateau) seront ajoutées dans src/pages/ sur leurs branches respectives et
@@ -15,8 +18,8 @@ function App() {
     <>
       <Navbar />
       <Routes>
-        <Route path="/login" element={<Placeholder label="Connexion" />} />
-        <Route path="/signup" element={<Placeholder label="Créer un compte" />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />}/>
 
         {/* Route de dev temporaire, a retirer une fois GamePage pret (voir src/dev/) */}
         <Route path="/test-echecs" element={<TestPlateau />} />
@@ -24,7 +27,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Placeholder label="Parties en cours" />} />
           <Route path="/history" element={<Placeholder label="Historique" />} />
-          <Route path="/games/:id" element={<Placeholder label="Partie" />} />
+          <Route path="/games/:id" element={<Placeholder label="Partie" />} />            
         </Route>
       </Routes>
     </>
@@ -32,3 +35,5 @@ function App() {
 }
 
 export default App
+
+// VAN oublie pas de configurer les routes elles mènent à rien
