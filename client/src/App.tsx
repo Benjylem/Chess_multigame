@@ -15,19 +15,29 @@ function Placeholder({ label }: { label: string }) {
 function App() {
   return (
     <>
-      <Navbar />
+        <Navbar />
+
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />}/>
+        <Route path="/signup" element={<SignupPage />} />
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<Placeholder label="Parties en cours" />} />
-          <Route path="/history" element={<Placeholder label="Historique" />} />
-          <Route path="/games/:id" element={<Placeholder label="Partie" />} />            
+          <Route
+            path="/"
+            element={<Placeholder label="Parties en cours" />}
+          />
+          <Route
+            path="/history"
+            element={<Placeholder label="Historique" />}
+          />
+          <Route
+            path="/games/:id"
+            element={<Placeholder label="Partie" />}
+          />
         </Route>
       </Routes>
     </>
-  )
+  );
 }
 
 export default App
