@@ -15,17 +15,27 @@ export function Navbar() {
 
   return (
     <nav>
-      <Link to="/">Parties en cours</Link>
-      <Link to="/history">Historique</Link>
+      <Link className="Navbar-link" to="/">
+        Parties en cours
+      </Link>
+      <Link className="Navbar-link" to="/history">
+        Historique
+      </Link>
       {user ? (
         <>
           <span>{user.email}</span>
-          <button onClick={handleLogout}>Se déconnecter</button>
+          <button className="Navbar-link" onClick={handleLogout}>
+            Se déconnecter
+          </button>
         </>
       ) : (
         <>
-          <Link to="/login">Connexion</Link>
-          <Link to="/signup">Créer un compte</Link>
+          <Link className="Navbar-link" to="/login">
+            Connexion
+          </Link>
+          <Link className="Navbar-link" to="/signup">
+            Créer un compte
+          </Link>
         </>
       )}
     </nav>
