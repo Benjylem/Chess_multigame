@@ -1,7 +1,7 @@
 // Lot 0 — wrapper fetch commun. Ajoute automatiquement le header Authorization
 // quand un token est passé, et transforme les erreurs HTTP en exceptions JS.
 
-const BASE_URL = "http://127.0.0.1:8000";
+const BASE_URL = "http://localhost:8000";
 
 export class ApiError extends Error {
   status: number;
