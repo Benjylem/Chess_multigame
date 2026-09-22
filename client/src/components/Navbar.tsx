@@ -3,7 +3,7 @@
 
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-<Link to="/create-game">Créer une partie</Link>
+
 export function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
