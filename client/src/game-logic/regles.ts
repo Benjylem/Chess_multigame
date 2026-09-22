@@ -17,7 +17,7 @@ function trouverRoi(plateau: Plateau, couleur: Couleur): Position | null {
 }
 
 // Renvoie la couleur adverse d'une couleur donnee
-function couleurAdverse(couleur: Couleur): Couleur {
+export function couleurAdverse(couleur: Couleur): Couleur {
   if (couleur === "blanc") {
     return "noir";
   }
