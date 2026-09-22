@@ -13,7 +13,7 @@ type AuthAction =
   | { type: "LOGIN"; token: string; user: User }
   | { type: "LOGOUT" };
 
-function authReducer(state: AuthState, action: AuthAction): AuthState {
+function authReducer(_state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
     case "LOGIN":
       return { token: action.token, user: action.user };
