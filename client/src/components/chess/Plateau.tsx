@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Couleur, Piece, Plateau as PlateauDuJeu, Position } from "../../game-logic/types";
+import type { Couleur, Piece, Plateau as PlateauDuJeu, Position, TypePiece } from "../../game-logic/types";
 import { getPieceA } from "../../game-logic/board";
 import { deplacerPiece, getMouvementsLegaux } from "../../game-logic/regles";
 import { Case } from "./Case";
@@ -8,9 +8,12 @@ import { PieceView } from "./PieceView";
 interface ProprietesPlateau {
   plateau: PlateauDuJeu;
   // La couleur qui a le droit de jouer en ce moment. Le Plateau ne selectionne
-  // que les pieces de cette couleur : c'est au parent (plus tard GamePage, via
+  // que les pieces de cette couleur : c'est au parent (GamePage, via
   // isYourTurn/currentTurnUserId venant du backend) de dire qui doit jouer.
   couleurQuiJoue: Couleur;
+  // Si false, le plateau est juste affiche : aucun clic n'est pris en compte.
+  // Utilise quand ce n'est pas le tour du joueur qui regarde l'ecran.
+  interactif: boolean;
   // Appelee avec le nouveau plateau, a chaque fois qu'un coup est joue.
   // Ce composant ne sait pas gerer le tour au-dela de bloquer les pieces de la
   // mauvaise couleur : c'est au parent de faire passer le tour au joueur suivant.
@@ -19,6 +22,48 @@ interface ProprietesPlateau {
 
 function estMemeCase(a: Position, b: Position): boolean {
   return a.ligne === b.ligne && a.colonne === b.colonne;
+}
+
+// Nombre de chaque piece present dans le camp de depart d'un joueur.
+const COMPOSITION_DEPART: Record<TypePiece, number> = {
+  pion: 8,
+  tour: 2,
+  cavalier: 2,
+  fou: 2,
+  dame: 1,
+  roi: 1,
+};
+
+// Les pieces d'une couleur qui ne sont plus sur le plateau : la difference
+// entre la composition de depart et ce qui reste. Calcule directement depuis
+// le plateau actuel (pas d'etat separe a tenir a jour), donc ca marche aussi
+// bien pour nos propres coups que pour ceux recuperes du serveur.
+function getPiecesCapturees(plateau: PlateauDuJeu, couleur: Couleur): Piece[] {
+  const restantes: Record<TypePiece, number> = {
+    pion: 0,
+    tour: 0,
+    cavalier: 0,
+    fou: 0,
+    dame: 0,
+    roi: 0,
+  };
+
+  for (const ligne of plateau) {
+    for (const caseDuPlateau of ligne) {
+      if (caseDuPlateau && caseDuPlateau.couleur === couleur) {
+        restantes[caseDuPlateau.type] += 1;
+      }
+    }
+  }
+
+  const capturees: Piece[] = [];
+  for (const type of Object.keys(COMPOSITION_DEPART) as TypePiece[]) {
+    const nombreCapture = COMPOSITION_DEPART[type] - restantes[type];
+    for (let i = 0; i < nombreCapture; i++) {
+      capturees.push({ type, couleur });
+    }
+  }
+  return capturees;
 }
 
 // Petite liste de symboles pour les pieces capturees d'une couleur, affichee a
@@ -33,11 +78,9 @@ function PiecesCapturees({ pieces }: { pieces: Piece[] }) {
   );
 }
 
-export function Plateau({ plateau, couleurQuiJoue, onCoupJoue }: ProprietesPlateau) {
+export function Plateau({ plateau, couleurQuiJoue, interactif, onCoupJoue }: ProprietesPlateau) {
   const [caseSelectionnee, setCaseSelectionnee] = useState<Position | null>(null);
   const [coupsPossibles, setCoupsPossibles] = useState<Position[]>([]);
-  const [piecesBlanchesCapturees, setPiecesBlanchesCapturees] = useState<Piece[]>([]);
-  const [piecesNoiresCapturees, setPiecesNoiresCapturees] = useState<Piece[]>([]);
 
   function deselectionner() {
     setCaseSelectionnee(null);
@@ -50,22 +93,15 @@ export function Plateau({ plateau, couleurQuiJoue, onCoupJoue }: ProprietesPlate
   }
 
   function surClicCase(position: Position) {
+    if (!interactif) {
+      return;
+    }
+
     const piece = getPieceA(plateau, position.ligne, position.colonne);
 
     if (caseSelectionnee) {
       const estUnCoupPossible = coupsPossibles.some((coup) => estMemeCase(coup, position));
       if (estUnCoupPossible) {
-        // La piece qui occupe la case d'arrivee, s'il y en a une, va etre
-        // capturee par ce coup : on la garde avant de jouer le coup.
-        const pieceCapturee = getPieceA(plateau, position.ligne, position.colonne);
-        if (pieceCapturee) {
-          if (pieceCapturee.couleur === "blanc") {
-            setPiecesBlanchesCapturees([...piecesBlanchesCapturees, pieceCapturee]);
-          } else {
-            setPiecesNoiresCapturees([...piecesNoiresCapturees, pieceCapturee]);
-          }
-        }
-
         const nouveauPlateau = deplacerPiece(plateau, caseSelectionnee, position);
         onCoupJoue(nouveauPlateau);
         deselectionner();
@@ -117,9 +153,9 @@ export function Plateau({ plateau, couleurQuiJoue, onCoupJoue }: ProprietesPlate
 
   return (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "1rem" }}>
-      <PiecesCapturees pieces={piecesBlanchesCapturees} />
+      <PiecesCapturees pieces={getPiecesCapturees(plateau, "blanc")} />
       <div style={{ width: "480px", maxWidth: "100%" }}>{lignes}</div>
-      <PiecesCapturees pieces={piecesNoiresCapturees} />
+      <PiecesCapturees pieces={getPiecesCapturees(plateau, "noir")} />
     </div>
   );
 }
