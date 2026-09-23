@@ -14,6 +14,9 @@ interface ProprietesPlateau {
   // Si false, le plateau est juste affiche : aucun clic n'est pris en compte.
   // Utilise quand ce n'est pas le tour du joueur qui regarde l'ecran.
   interactif: boolean;
+  // De quel cote regarde le joueur : "blanc" affiche les blancs en bas (vue
+  // habituelle), "noir" retourne le plateau pour que les noirs soient en bas.
+  orientation: Couleur;
   // Appelee avec le nouveau plateau, a chaque fois qu'un coup est joue.
   // Ce composant ne sait pas gerer le tour au-dela de bloquer les pieces de la
   // mauvaise couleur : c'est au parent de faire passer le tour au joueur suivant.
@@ -78,7 +81,7 @@ function PiecesCapturees({ pieces }: { pieces: Piece[] }) {
   );
 }
 
-export function Plateau({ plateau, couleurQuiJoue, interactif, onCoupJoue }: ProprietesPlateau) {
+export function Plateau({ plateau, couleurQuiJoue, interactif, orientation, onCoupJoue }: ProprietesPlateau) {
   const [caseSelectionnee, setCaseSelectionnee] = useState<Position | null>(null);
   const [coupsPossibles, setCoupsPossibles] = useState<Position[]>([]);
 
@@ -117,10 +120,20 @@ export function Plateau({ plateau, couleurQuiJoue, interactif, onCoupJoue }: Pro
     }
   }
 
+  // En vue normale on parcourt les lignes/colonnes de 0 a 7 (blancs en bas).
+  // En vue retournee (orientation "noir"), on les parcourt de 7 a 0 : ce qui
+  // etait en bas se retrouve en haut et inversement.
+  const ordreLignes = [0, 1, 2, 3, 4, 5, 6, 7];
+  const ordreColonnes = [0, 1, 2, 3, 4, 5, 6, 7];
+  if (orientation === "noir") {
+    ordreLignes.reverse();
+    ordreColonnes.reverse();
+  }
+
   const lignes = [];
-  for (let ligne = 0; ligne < 8; ligne++) {
+  for (const ligne of ordreLignes) {
     const cases = [];
-    for (let colonne = 0; colonne < 8; colonne++) {
+    for (const colonne of ordreColonnes) {
       const position: Position = { ligne, colonne };
       const piece = getPieceA(plateau, ligne, colonne);
 

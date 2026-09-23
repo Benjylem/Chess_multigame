@@ -224,6 +224,7 @@ export function GamePage() {
         plateau={etat.plateau}
         couleurQuiJoue={maCouleur}
         interactif={partie.isYourTurn && !enCours}
+        orientation={maCouleur}
         onCoupJoue={surCoupJoue}
       />
     </div>
