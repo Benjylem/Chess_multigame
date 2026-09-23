@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createGame, inviteToGame } from "../api/games";
 import { useAuth } from "../context/AuthContext";
+import { createGame, inviteToGame } from "../api/games";
 
 export function CreateGame() {
   const { token } = useAuth();
@@ -15,13 +15,16 @@ export function CreateGame() {
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
   const [loading, setLoading] = useState(false);
 
-  async function handleCreateGame(event: React.FormEvent) {
+  async function handleCreateGame(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
-    setError("");
     setMessage("");
+    setError("");
 
     if (!token) {
       setError("Tu dois être connecté.");
@@ -34,7 +37,9 @@ export function CreateGame() {
     }
 
     if (maxPlayers < minPlayers) {
-      setError("Le maximum doit être supérieur ou égal au minimum.");
+      setError(
+        "Le maximum doit être supérieur ou égal au minimum.",
+      );
       return;
     }
 
@@ -60,11 +65,13 @@ export function CreateGame() {
     }
   }
 
-  async function handleInvite(event: React.FormEvent) {
+  async function handleInvite(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
-    setError("");
     setMessage("");
+    setError("");
 
     if (!token || gameId === null) {
       setError("Crée d'abord une partie.");
@@ -79,7 +86,11 @@ export function CreateGame() {
     try {
       setLoading(true);
 
-      await inviteToGame(token, gameId, email.trim());
+      await inviteToGame(
+        token,
+        gameId,
+        email.trim(),
+      );
 
       setMessage(`Invitation envoyée à ${email}.`);
       setEmail("");
@@ -153,7 +164,9 @@ export function CreateGame() {
               type="email"
               placeholder="joueur@example.com"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) =>
+                setEmail(event.target.value)
+              }
             />
 
             <button type="submit" disabled={loading}>

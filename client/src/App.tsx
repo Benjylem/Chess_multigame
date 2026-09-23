@@ -4,12 +4,10 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { CreateGame } from "./pages/CreateGame";
+import { MyGames } from "./pages/MyGames";
+import { History } from "./pages/History";
 import { GamePage } from "./pages/GamePage";
 import "./App.css";
-
-function Placeholder({ label }: { label: string }) {
-  return <p>{label} (TODO)</p>;
-}
 
 function App() {
   return (
@@ -21,9 +19,9 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<Placeholder label="Parties en cours" />} />
+          <Route path="/" element={<MyGames />} />
           <Route path="/create-game" element={<CreateGame />} />
-          <Route path="/history" element={<Placeholder label="Historique" />} />
+          <Route path="/history" element={<History />} />
           <Route path="/games/:id" element={<GamePage />} />
         </Route>
       </Routes>
