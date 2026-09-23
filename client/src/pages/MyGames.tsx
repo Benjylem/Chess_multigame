@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getMyGames } from "../api/games";
 import type { Game } from "../types";
@@ -121,6 +122,8 @@ export function MyGames() {
                   <strong>C'est ton tour !</strong>
                 </p>
               )}
+
+              <Link to={`/games/${game.id}`}>Rejoindre la partie</Link>
             </article>
           ))}
         </section>
