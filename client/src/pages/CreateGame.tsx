@@ -161,8 +161,8 @@ export function CreateGame() {
             </button>
           </form>
 
-          <button onClick={() => navigate("/")}>
-            Voir mes parties
+          <button onClick={() => navigate(`/games/${gameId}`)}>
+            Rejoindre la partie
           </button>
         </section>
       )}
