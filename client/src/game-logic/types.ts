@@ -27,3 +27,31 @@ export interface Deplacement {
   dLigne: number;
   dColonne: number;
 }
+// Les pièces en lesquelles un pion peut être transformé quand il arrive au bout du plateau.
+export type TypePiecePromotion = "dame" | "tour" | "fou" | "cavalier";
+
+// Les roques encore possibles. Le "petit roque" se fait du côté du roi (avec la tour de droite),
+// le "grand roque" du côté de la dame (avec la tour de gauche).
+// Un roque n'est plus possible dès que le roi ou la tour concernée a bougé.
+export interface DroitsDeRoque {
+  blancPetit: boolean;
+  blancGrand: boolean;
+  noirPetit: boolean;
+  noirGrand: boolean;
+}
+
+// Ce qu'il faut savoir en plus du plateau pour connaître les coups possibles :
+// les roques encore permis, et la case où l'on peut faire une prise en passant
+// (la case que vient de traverser un pion qui a avancé de 2 cases, sinon null).
+export interface ContexteDePartie {
+  droitsDeRoque: DroitsDeRoque;
+  casePriseEnPassant: Position | null;
+}
+
+// Un coup joué par un joueur : de quelle case à quelle case,
+// et en quelle pièce le pion est promu si le coup amène un pion au bout du plateau.
+export interface Coup {
+  depart: Position;
+  arrivee: Position;
+  promotion?: TypePiecePromotion;
+}
