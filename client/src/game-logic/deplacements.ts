@@ -1,3 +1,6 @@
+// Calcul des déplacements possibles d'une pièce (là où elle peut aller),
+// sans encore tenir compte de la mise en échec du roi (voir regles.ts pour ça).
+
 import type { Deplacement, Piece, Plateau, Position } from "./types";
 import { getPieceA } from "./board";
 
@@ -103,20 +106,32 @@ function getMouvementsFixes(
 
 // Le pion est le cas particulier : il avance tout droit (sans capturer), et
 // capture uniquement en diagonale. Il avance de 2 cases seulement depuis sa
-// case de depart. (La prise en passant et la promotion seront geres a part.)
-function getMouvementsPion(plateau: Plateau, depart: Position, piece: Piece): Position[] {
+// case de depart. Il peut aussi faire la "prise en passant" : capturer en diagonale
+// sur la case vide `casePriseEnPassant`, juste derriere un pion adverse qui vient
+// d'avancer de 2 cases. (La promotion, elle, est geree dans regles.ts.)
+function getMouvementsPion(
+  plateau: Plateau,
+  depart: Position,
+  piece: Piece,
+  casePriseEnPassant: Position | null,
+): Position[] {
   const mouvements: Position[] = [];
 
   // Les blancs avancent vers le haut du plateau (ligne qui diminue),
   // les noirs avancent vers le bas (ligne qui augmente).
+  // La prise en passant n'est possible que depuis la 5e rangee du pion
+  // (ligne 3 pour les blancs, ligne 4 pour les noirs).
   let direction: number;
   let ligneDeDepart: number;
+  let lignePourPriseEnPassant: number;
   if (piece.couleur === "blanc") {
     direction = -1;
     ligneDeDepart = 6;
+    lignePourPriseEnPassant = 3;
   } else {
     direction = 1;
     ligneDeDepart = 1;
+    lignePourPriseEnPassant = 4;
   }
 
   const uneCaseDevant = depart.ligne + direction;
@@ -147,6 +162,16 @@ function getMouvementsPion(plateau: Plateau, depart: Position, piece: Piece): Po
     if (pieceAdverse && pieceAdverse.couleur !== piece.couleur) {
       mouvements.push({ ligne: uneCaseDevant, colonne: colonneCapture });
     }
+
+    // prise en passant : on capture en diagonale sur la case vide juste derriere le pion adverse
+    const estPriseEnPassant =
+      casePriseEnPassant !== null &&
+      depart.ligne === lignePourPriseEnPassant &&
+      casePriseEnPassant.ligne === uneCaseDevant &&
+      casePriseEnPassant.colonne === colonneCapture;
+    if (estPriseEnPassant) {
+      mouvements.push({ ligne: uneCaseDevant, colonne: colonneCapture });
+    }
   }
 
   return mouvements;
@@ -154,8 +179,13 @@ function getMouvementsPion(plateau: Plateau, depart: Position, piece: Piece): Po
 
 // Fonction principale : renvoie toutes les cases ou peut se deplacer la piece
 // situee a `depart`. Ne verifie pas encore si ce mouvement mettrait son propre
-// roi en echec (ce sera fait dans regles.ts).
-export function getMouvementsPossibles(plateau: Plateau, depart: Position): Position[] {
+// roi en echec, et ne connait pas le roque (tout ca est fait dans regles.ts).
+// `casePriseEnPassant` sert uniquement aux pions (voir getMouvementsPion).
+export function getMouvementsPossibles(
+  plateau: Plateau,
+  depart: Position,
+  casePriseEnPassant: Position | null = null,
+): Position[] {
   const piece = getPieceA(plateau, depart.ligne, depart.colonne);
   if (!piece) {
     return [];
@@ -163,7 +193,7 @@ export function getMouvementsPossibles(plateau: Plateau, depart: Position): Posi
 
   switch (piece.type) {
     case "pion":
-      return getMouvementsPion(plateau, depart, piece);
+      return getMouvementsPion(plateau, depart, piece, casePriseEnPassant);
     case "tour":
       return getMouvementsGlissants(plateau, depart, piece, DIRECTIONS_TOUR);
     case "fou":

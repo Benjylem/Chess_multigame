@@ -1,4 +1,6 @@
-import type { Plateau, Couleur, Piece, TypePiece } from "./types";
+// Construction du plateau de départ d'une partie d'échecs, et lecture d'une case.
+
+import type { ContexteDePartie, Plateau, Couleur, Piece, TypePiece } from "./types";
 
 // Petit raccourci pour creer une piece sans repeter "{ type: ..., couleur: ... }" partout
 function piece(type: TypePiece, couleur: Couleur): Piece {
@@ -47,4 +49,11 @@ export function creerPlateauDeDepart(): Plateau {
 // Renvoie la piece a une position donnee (ou null si la case est vide)
 export function getPieceA(plateau: Plateau, ligne: number, colonne: number): Piece | null {
   return plateau[ligne][colonne];
+}
+// Le contexte au début d'une partie : les 4 roques sont possibles, et il n'y a pas de prise en passant.
+export function creerContexteDeDepart(): ContexteDePartie {
+  return {
+    droitsDeRoque: { blancPetit: true, blancGrand: true, noirPetit: true, noirGrand: true },
+    casePriseEnPassant: null,
+  };
 }
