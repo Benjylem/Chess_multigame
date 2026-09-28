@@ -43,7 +43,7 @@ au-dessus d'un serveur de jeu générique fourni par le professeur.
 | Frontend | React 19, TypeScript, Vite, React Router |
 | État | Context API + `useReducer` (connexion), état local des composants (parties) |
 | Backend | Serveur Deno fourni par le professeur (dossier `server/`), base SQLite |
-| Qualité | Vérification des types (`tsc`), linter (`oxlint`), 45 tests unitaires des règles |
+| Qualité | Vérification des types (`tsc`), linter (`oxlint`), 84 tests automatiques (règles des échecs et messages d'erreur) |
 
 Le serveur est **générique** : il ne connaît rien aux échecs. Il stocke seulement la partie sous forme de texte JSON
 libre et décide qui a le droit d'écrire (uniquement le joueur dont c'est le tour). **Toute la logique des échecs est
@@ -98,28 +98,35 @@ onglets normaux partageraient le même compte).
 
 ### Lancer les tests unitaires
 
-Les tests vérifient toutes les règles des échecs, sans navigateur ni serveur. Depuis le dossier `client/` :
+Il y a deux séries de tests, qui n'ont besoin ni du navigateur ni du serveur. Depuis le dossier `client/` :
 
 ```bash
 cd client
-npm install        # seulement la première fois
-npm test
+npm install               # seulement la première fois
+npm test                  # lance les deux séries (84 tests)
+npm run test:regles       # seulement les règles des échecs (45 tests)
+npm run test:erreurs      # seulement la traduction des messages d'erreur (39 tests)
 ```
 
-Résultat attendu : une ligne `OK` par test, puis la conclusion :
+Résultat attendu : une ligne `OK` par test, puis la conclusion de chaque série :
 
 ```
 OK  Roque : petit roque blanc propose (g1)
 OK  En passant : le pion adverse est retire du plateau
 ...
 TOUS LES 45 TESTS PASSENT
+...
+OK  Traduit : It is not your turn
+...
+TOUS LES 39 TESTS PASSENT
 ```
 
 Si un test échoue, il est affiché avec `KO`, la conclusion indique le nombre de tests en échec, et la commande
 se termine avec une erreur.
 
-**Comment ça marche** : la commande compile le fichier `client/tests/regles.test.ts` dans un dossier temporaire
-(`client/tests-build/`, ignoré par git) puis l'exécute avec Node. Aucun outil de test supplémentaire n'est nécessaire.
+**Comment ça marche** : chaque commande compile son fichier de test (`client/tests/regles.test.ts` ou
+`client/tests/erreurs.test.ts`) dans un dossier temporaire (`client/tests-build/`, ignoré par git) puis l'exécute
+avec Node. Aucun outil de test supplémentaire n'est nécessaire.
 
 ### Ce que les tests vérifient
 
@@ -130,6 +137,7 @@ se termine avec une erreur.
 | Prise en passant | Possible uniquement au coup suivant ; le pion adverse est retiré ; interdite si elle expose son propre roi ; pas de fausse prise |
 | Promotion | Dame, tour, fou ou cavalier ; blancs et noirs ; avec capture ; impossible sur une case occupée |
 | Fin de partie | Mat du fou (4 coups), pat classique, matériel insuffisant (roi seul, roi + fou, roi + cavalier) |
+| Messages d'erreur | Les erreurs du serveur (écrites en anglais) sont toutes affichées en français : mauvais mot de passe, compte déjà existant, email sans compte, ce n'est pas ton tour... Un test lit le code du serveur et vérifie que **chaque** message a une traduction |
 
 ### Ajouter un test
 
@@ -179,7 +187,7 @@ il faut suivre les coups de la couleur qu'on a.
 ```
 client/                     Frontend React + TypeScript
   src/
-    api/                    Appels au serveur (connexion, parties)
+    api/                    Appels au serveur (connexion, parties) et traduction des erreurs en français
     components/             Barre de navigation, fenêtre d'aide, salle d'attente
       chess/                Affichage du plateau, des cases et des pièces
     context/                Connexion partagée dans toute l'application
@@ -190,7 +198,7 @@ client/                     Frontend React + TypeScript
       regles.ts             Échec, mat, pat, roque, prise en passant, promotion
       partie.ts             Ce qui est enregistré sur le serveur pour une partie
     pages/                  Connexion, inscription, mes parties, création, partie, historique
-  tests/                    Tests unitaires des règles
+  tests/                    Tests automatiques (règles des échecs, messages d'erreur)
 server/                     Serveur fourni par le professeur (Deno + SQLite)
 ```
 
