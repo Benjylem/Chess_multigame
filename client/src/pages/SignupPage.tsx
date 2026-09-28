@@ -34,7 +34,6 @@ export function SignupPage() {
     <main className="auth-page">
       <section className="auth-panel" aria-labelledby="signup-title">
         <h1 id="signup-title">Créer un compte</h1>
-        <p className="auth-intro">Inscris-toi stp</p>
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>
             Adresse email
