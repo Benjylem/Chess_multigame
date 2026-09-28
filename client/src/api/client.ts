@@ -1,6 +1,8 @@
 // Fonction commune pour appeler le backend. Elle ajoute le token dans l'en-tête
 // Authorization quand on en donne un, et transforme les erreurs HTTP en exceptions JS.
 
+import { MESSAGE_SERVEUR_INJOIGNABLE, traduireErreur } from "./messagesErreur";
+
 const BASE_URL = "http://localhost:8000";
 
 // Erreur levée quand le backend répond avec un code d'erreur (ex: 403 "pas ton tour").
@@ -26,7 +28,8 @@ interface ReponseErreur {
 }
 
 // Envoie une requête au backend et renvoie la réponse déjà convertie depuis le JSON.
-// En cas d'erreur HTTP, lève une ApiError avec le message du serveur.
+// En cas d'erreur HTTP, lève une ApiError dont le message est traduit en français
+// (voir messagesErreur.ts). Si le serveur ne répond pas du tout, l'erreur l'explique aussi.
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, token } = options;
 
@@ -42,11 +45,17 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     corpsEnvoye = JSON.stringify(body);
   }
 
-  const response = await fetch(`${BASE_URL}${path}`, {
-    method,
-    headers,
-    body: corpsEnvoye,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${BASE_URL}${path}`, {
+      method,
+      headers,
+      body: corpsEnvoye,
+    });
+  } catch {
+    // fetch échoue quand le serveur est éteint ou injoignable (pas de réponse HTTP du tout)
+    throw new ApiError(0, MESSAGE_SERVEUR_INJOIGNABLE);
+  }
 
   if (response.status === 204) {
     return undefined as T;
@@ -55,11 +64,11 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    let message = `Erreur HTTP ${response.status}`;
+    let message = "";
     if (data && typeof data === "object" && "error" in data) {
       message = String((data as ReponseErreur).error);
     }
-    throw new ApiError(response.status, message);
+    throw new ApiError(response.status, traduireErreur(message, response.status));
   }
 
   return data as T;
