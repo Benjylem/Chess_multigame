@@ -91,7 +91,7 @@ export function MyGames() {
     <main>
       <h1>Mes parties</h1>
 
-      {error && <p>{error}</p>}
+      {error && <p className="message-erreur">{error}</p>}
 
       {games.length === 0 && !error && (
         <p>
@@ -111,7 +111,9 @@ export function MyGames() {
               <strong>C'est ton tour !</strong>
             </p>
           )}
-          <Link to={`/games/${game.id}`}>{getTexteDuLien(game)}</Link>
+          <Link className="bouton" to={`/games/${game.id}`}>
+            {getTexteDuLien(game)}
+          </Link>
         </article>
       ))}
     </main>

@@ -107,14 +107,14 @@ export function SalleDAttente({ partie, token, user, onPartieMiseAJour }: Propri
         ))}
       </ul>
 
-      {message && <p>{message}</p>}
-      {erreur && <p>{erreur}</p>}
+      {message && <p className="message-info">{message}</p>}
+      {erreur && <p className="message-erreur">{erreur}</p>}
 
       {estCreateur && !partieComplete && (
         <section>
           <h2>Inviter ton adversaire</h2>
           <p>Il doit déjà avoir un compte : entre l'email qu'il a utilisé pour s'inscrire.</p>
-          <form onSubmit={inviter}>
+          <form className="formulaire" onSubmit={inviter}>
             <label htmlFor="email">Email de l'adversaire</label>
             <input
               id="email"
@@ -123,7 +123,7 @@ export function SalleDAttente({ partie, token, user, onPartieMiseAJour }: Propri
               value={email}
               onChange={(event) => setEmail(event.target.value)}
             />
-            <button type="submit" disabled={enCours}>
+            <button className="bouton" type="submit" disabled={enCours}>
               {enCours ? "Envoi..." : "Inviter"}
             </button>
           </form>
@@ -131,7 +131,7 @@ export function SalleDAttente({ partie, token, user, onPartieMiseAJour }: Propri
       )}
 
       {estCreateur && partieComplete && (
-        <button onClick={demarrer} disabled={enCours}>
+        <button className="bouton" onClick={demarrer} disabled={enCours}>
           {enCours ? "Démarrage..." : "Démarrer la partie"}
         </button>
       )}

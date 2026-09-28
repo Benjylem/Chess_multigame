@@ -83,7 +83,7 @@ export function History() {
     <main>
       <h1>Historique</h1>
 
-      {error && <p>{error}</p>}
+      {error && <p className="message-erreur">{error}</p>}
 
       {games.length === 0 && !error && <p>Tu n'as aucune partie terminée pour le moment.</p>}
 

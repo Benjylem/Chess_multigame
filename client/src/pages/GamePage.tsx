@@ -213,9 +213,7 @@ export function GamePage() {
     return (
       <main>
         <h1>Partie #{partie.id}</h1>
-        <p>
-          <strong>{message}</strong>
-        </p>
+        <p className="statut statut-fin">{message}</p>
         <Plateau
           plateau={etat.plateau}
           contexte={etat}
@@ -239,11 +237,13 @@ export function GamePage() {
         Tu joues les {maCouleur === "blanc" ? "blancs" : "noirs"}
         {adversaire && <> contre {adversaire.email}</>}.
       </p>
-      <p>
-        <strong>{partie.isYourTurn ? "C'est ton tour de jouer" : "En attente de l'adversaire..."}</strong>
+      <p className={partie.isYourTurn ? "statut statut-tour" : "statut"}>
+        {partie.isYourTurn ? "C'est ton tour de jouer" : "En attente de l'adversaire..."}
       </p>
-      {partie.isYourTurn && estEnEchec(etat.plateau, maCouleur) && <p>Attention : ton roi est en échec !</p>}
-      {erreur && <p>{erreur}</p>}
+      {partie.isYourTurn && estEnEchec(etat.plateau, maCouleur) && (
+        <p className="message-erreur">Attention : ton roi est en échec !</p>
+      )}
+      {erreur && <p className="message-erreur">{erreur}</p>}
 
       <Plateau
         plateau={etat.plateau}
@@ -255,7 +255,7 @@ export function GamePage() {
       />
 
       <p>
-        <button onClick={abandonner} disabled={!partie.isYourTurn || enCours}>
+        <button className="bouton bouton-danger" onClick={abandonner} disabled={!partie.isYourTurn || enCours}>
           Abandonner
         </button>
       </p>

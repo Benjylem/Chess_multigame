@@ -44,9 +44,9 @@ export function CreateGame() {
         invites ton adversaire par email, puis tu la démarres.
       </p>
 
-      {error && <p>{error}</p>}
+      {error && <p className="message-erreur">{error}</p>}
 
-      <button onClick={handleCreateGame} disabled={loading}>
+      <button className="bouton" onClick={handleCreateGame} disabled={loading}>
         {loading ? "Création..." : "Créer la partie"}
       </button>
     </main>
