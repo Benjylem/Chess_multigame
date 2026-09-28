@@ -29,16 +29,20 @@ export function Navbar() {
   }
 
   return (
-    <nav>
-      <Link className="Navbar-link" to="/">
-        Parties en cours
-      </Link>
-      <Link className="Navbar-link" to="/create-game">
-        Créer une partie
-      </Link>
-      <Link className="Navbar-link" to="/history">
-        Historique
-      </Link>
+    <nav className="navbar">
+      {user && (
+        <>
+          <Link className="Navbar-link" to="/">
+            Parties en cours
+          </Link>
+          <Link className="Navbar-link" to="/create-game">
+            Créer une partie
+          </Link>
+          <Link className="Navbar-link" to="/history">
+            Historique
+          </Link>
+        </>
+      )}
       <button className="Navbar-link" onClick={() => setTutorielOuvertParLeJoueur(true)}>
         Comment jouer
       </button>
