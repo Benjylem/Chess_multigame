@@ -29,5 +29,21 @@ export function PieceView({ piece }: ProprietesPieceView) {
     symbole = SYMBOLES_BLANC[piece.type];
   }
 
-  return <span style={{ fontSize: "2.2rem", lineHeight: 1, userSelect: "none" }}>{symbole}</span>;
+  const estBlanche = piece.couleur === "blanc";
+
+  return (
+    <span
+      style={{
+        fontSize: "2.2rem",
+        lineHeight: 1,
+        userSelect: "none",
+        color: estBlanche ? "#ffffff" : "#1a1a1a",
+        textShadow: estBlanche
+          ? "0 1px 2px rgba(156, 154, 154, 0.8)"
+          : "0 1px 1px rgba(255, 255, 255, 0.35)",
+      }}
+    >
+      {symbole}
+    </span>
+  );
 }
