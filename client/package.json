@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "rolldown tests/regles.test.ts --file tests-build/regles.test.mjs --format esm --platform node && node tests-build/regles.test.mjs"
+    "test": "npm run test:regles && npm run test:erreurs",
+    "test:regles": "rolldown tests/regles.test.ts --file tests-build/regles.test.mjs --format esm --platform node && node tests-build/regles.test.mjs",
+    "test:erreurs": "rolldown tests/erreurs.test.ts --file tests-build/erreurs.test.mjs --format esm --platform node && node tests-build/erreurs.test.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
