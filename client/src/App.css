@@ -197,3 +197,34 @@
   opacity: 0.4;
   cursor: default;
 }
+
+/* Menu de choix de la piece quand un pion est promu */
+.promotion {
+  width: min(100%, 360px);
+  margin: 16px auto;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+}
+
+.promotion-choix {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.promotion-choix button {
+  width: 64px;
+  height: 64px;
+  background: #f0d9b5;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.promotion-choix button:hover {
+  background: #f6f669;
+}

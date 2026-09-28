@@ -9,10 +9,17 @@ import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getGame, markGameSeen, updateGameState } from "../api/games";
 import type { Game } from "../types";
-import type { Plateau as PlateauDuJeu } from "../game-logic/types";
+import type { Coup } from "../game-logic/types";
 import { creerEtatApresCoup, getMessageDeFin, lireDonneesDeFin, lireEtat } from "../game-logic/partie";
 import type { DonneesDeFin, EtatPartie, Resultat } from "../game-logic/partie";
-import { couleurAdverse, estEchecEtMat, estEnEchec, estPat } from "../game-logic/regles";
+import {
+  couleurAdverse,
+  estEchecEtMat,
+  estEnEchec,
+  estMaterielInsuffisant,
+  estPat,
+  jouerCoup,
+} from "../game-logic/regles";
 import { Plateau } from "../components/chess/Plateau";
 import { SalleDAttente } from "../components/SalleDAttente";
 
@@ -164,17 +171,22 @@ export function GamePage() {
     });
   };
 
-  // Appelée par le plateau quand le joueur joue un coup : on regarde si la partie se termine
-  // (échec et mat ou pat pour l'adversaire), sinon le tour passe à l'adversaire.
-  const surCoupJoue = (nouveauPlateau: PlateauDuJeu) => {
-    const nouvelEtat = creerEtatApresCoup(etat, nouveauPlateau);
+  // Appelée par le plateau quand le joueur joue un coup : on applique le coup (roque, prise en passant
+  // et promotion compris), puis on regarde si la partie se termine (échec et mat, pat ou match nul
+  // par manque de pièces). Sinon le tour passe à l'adversaire.
+  const surCoupJoue = (coup: Coup) => {
+    const resultatDuCoup = jouerCoup(etat.plateau, etat, coup);
+    const nouvelEtat = creerEtatApresCoup(etat, resultatDuCoup);
     const couleurDeLAdversaire = couleurAdverse(maCouleur);
 
-    if (estEchecEtMat(nouveauPlateau, couleurDeLAdversaire)) {
+    if (estEchecEtMat(resultatDuCoup.plateau, couleurDeLAdversaire, resultatDuCoup.contexte)) {
       return envoyer(() => terminerPartie(nouvelEtat, "echecEtMat", user.id));
     }
-    if (estPat(nouveauPlateau, couleurDeLAdversaire)) {
+    if (estPat(resultatDuCoup.plateau, couleurDeLAdversaire, resultatDuCoup.contexte)) {
       return envoyer(() => terminerPartie(nouvelEtat, "pat", null));
+    }
+    if (estMaterielInsuffisant(resultatDuCoup.plateau)) {
+      return envoyer(() => terminerPartie(nouvelEtat, "materielInsuffisant", null));
     }
     if (!adversaire) {
       return;
@@ -206,6 +218,7 @@ export function GamePage() {
         </p>
         <Plateau
           plateau={etat.plateau}
+          contexte={etat}
           couleurQuiJoue={maCouleur}
           interactif={false}
           orientation={maCouleur}
@@ -234,6 +247,7 @@ export function GamePage() {
 
       <Plateau
         plateau={etat.plateau}
+        contexte={etat}
         couleurQuiJoue={maCouleur}
         interactif={partie.isYourTurn && !enCours}
         orientation={maCouleur}

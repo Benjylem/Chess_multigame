@@ -4,7 +4,7 @@
 
 import { useState, type FormEvent } from "react";
 import { inviteToGame, startGame } from "../api/games";
-import { creerPlateauDeDepart } from "../game-logic/board";
+import { creerContexteDeDepart, creerPlateauDeDepart } from "../game-logic/board";
 import type { EtatPartie } from "../game-logic/partie";
 import type { Couleur } from "../game-logic/types";
 import type { Game, User } from "../types";
@@ -73,6 +73,7 @@ export function SalleDAttente({ partie, token, user, onPartieMiseAJour }: Propri
     }
 
     const etatDeDepart: EtatPartie = {
+      ...creerContexteDeDepart(),
       plateau: creerPlateauDeDepart(),
       couleurs,
       dernierCoupLe: Date.now(),

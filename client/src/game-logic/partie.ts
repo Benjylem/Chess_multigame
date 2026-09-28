@@ -2,10 +2,11 @@
 // Le serveur ne comprend pas les échecs : il garde juste deux textes (state et endData).
 // On y range du JSON, et ce fichier sert à l'écrire et à le relire proprement.
 
-import type { Couleur, Plateau } from "./types";
+import type { ContexteDePartie, Couleur, Plateau } from "./types";
 
-// Contenu du champ `state` : le plateau, qui joue quelle couleur, et l'heure du dernier coup.
-export interface EtatPartie {
+// Contenu du champ `state` : le plateau, qui joue quelle couleur, l'heure du dernier coup,
+// et ce qu'il faut savoir pour les coups spéciaux (roques encore permis, prise en passant possible).
+export interface EtatPartie extends ContexteDePartie {
   plateau: Plateau;
   // Pour chaque id de joueur, la couleur qu'il joue.
   couleurs: Record<number, Couleur>;
@@ -14,7 +15,7 @@ export interface EtatPartie {
 }
 
 // Comment une partie peut se terminer.
-export type Resultat = "echecEtMat" | "pat" | "abandon" | "inactivite";
+export type Resultat = "echecEtMat" | "pat" | "materielInsuffisant" | "abandon" | "inactivite";
 
 // Contenu du champ `endData` : comment la partie s'est terminée, et qui a gagné (null si match nul).
 export interface DonneesDeFin {
@@ -22,18 +23,34 @@ export interface DonneesDeFin {
   gagnantId: number | null;
 }
 
-// Renvoie le nouvel état de la partie après un coup : même partie, nouveau plateau, heure du coup mise à jour.
-export function creerEtatApresCoup(etat: EtatPartie, nouveauPlateau: Plateau): EtatPartie {
-  return { ...etat, plateau: nouveauPlateau, dernierCoupLe: Date.now() };
+// Renvoie le nouvel état de la partie après un coup (résultat de jouerCoup) : nouveau plateau,
+// nouveaux roques permis et prise en passant, et heure du coup mise à jour.
+export function creerEtatApresCoup(
+  etat: EtatPartie,
+  resultatDuCoup: { plateau: Plateau; contexte: ContexteDePartie },
+): EtatPartie {
+  return {
+    ...etat,
+    plateau: resultatDuCoup.plateau,
+    droitsDeRoque: resultatDuCoup.contexte.droitsDeRoque,
+    casePriseEnPassant: resultatDuCoup.contexte.casePriseEnPassant,
+    dernierCoupLe: Date.now(),
+  };
 }
 
 // Relit le champ `state` du backend. Renvoie null s'il est vide ou illisible.
+// Si une information sur les coups spéciaux manque (partie créée avant leur ajout), on
+// considère qu'aucun roque n'est permis et qu'il n'y a pas de prise en passant.
 export function lireEtat(state: string | null): EtatPartie | null {
   if (!state) {
     return null;
   }
   try {
-    return JSON.parse(state) as EtatPartie;
+    const etatParDefaut = {
+      droitsDeRoque: { blancPetit: false, blancGrand: false, noirPetit: false, noirGrand: false },
+      casePriseEnPassant: null,
+    };
+    return { ...etatParDefaut, ...JSON.parse(state) } as EtatPartie;
   } catch {
     return null;
   }
@@ -69,6 +86,9 @@ export function getMessageDeFin(donnees: DonneesDeFin | null, monId: number): st
   }
   if (donnees.resultat === "pat") {
     return "Partie nulle : pat (le roi n'est pas en échec mais aucun coup n'est possible).";
+  }
+  if (donnees.resultat === "materielInsuffisant") {
+    return "Partie nulle : il ne reste pas assez de pièces pour faire échec et mat.";
   }
   if (donnees.resultat === "inactivite") {
     return "Partie terminée : plus personne n'a joué depuis trop longtemps.";
