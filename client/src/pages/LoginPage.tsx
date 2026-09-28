@@ -34,7 +34,6 @@ export function LoginPage() {
     <main className="auth-page">
       <section className="auth-panel" aria-labelledby="login-title">
         <h1 id="login-title">Connexion</h1>
-        <p className="auth-intro">Inscris toi chacal</p>
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>
             Adresse email
