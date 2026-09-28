@@ -1,133 +1,233 @@
 # Chess Multigame
 
-Online two-player chess, played turn by turn in the browser. Each player uses their own computer: create a game,
-invite your opponent by email, and play. The game is complete: every move rule, check, checkmate, stalemate,
-castling, en passant and promotion are implemented.
+Jeu d'échecs en ligne à deux joueurs, tour par tour, dans le navigateur. Chaque joueur est sur son propre
+ordinateur : on crée une partie, on invite son adversaire par email, et on joue. Toutes les règles sont gérées :
+déplacements, échec, échec et mat, pat, roque, prise en passant et promotion.
 
-This is a school project (Ynov, B2 "fil rouge"): a multiplayer turn-based game built with **React + TypeScript**
-on top of a generic game backend provided by the teacher.
+Projet fil rouge de B2 (Ynov) réalisé en équipe de 3 : un jeu multijoueur au tour par tour en **React + TypeScript**,
+au-dessus d'un serveur de jeu générique fourni par le professeur.
 
-## Features
+## Sommaire
 
-- **Accounts**: sign up and log in with an email and a password. The session survives a page reload.
-- **Games**: create a game, invite your opponent by email, see all your games in progress, and browse your history
-  of finished games with the result (victory, defeat, draw).
-- **Complete chess rules**: all piece moves, check, checkmate, stalemate, castling, en passant, pawn promotion,
-  and draw by insufficient material. A move that leaves your own king in check is never allowed.
-- **Real multiplayer**: colors are drawn at random when the game starts, white plays first, the board updates on
-  the opponent's screen within one second, and you cannot play out of turn.
-- **End of game**: checkmate, stalemate, draw, resignation ("Abandonner"), or automatic end if nobody has played
-  for one hour. A clear message tells each player if they won, lost or drew.
-- **Help**: a step-by-step "Comment jouer" window opens after sign-up and can be reopened from the top bar.
-- **Comfort**: the board is flipped so you always play from the bottom, captured pieces are shown next to the
-  board, playable squares are highlighted, and the interface works in light and dark mode and on mobile.
+1. [Fonctionnalités](#fonctionnalités)
+2. [Technologies](#technologies)
+3. [Installation et lancement](#installation-et-lancement)
+4. [Comment jouer](#comment-jouer)
+5. [Tests](#tests)
+6. [Structure du projet](#structure-du-projet)
+7. [Fonctionnement technique](#fonctionnement-technique)
+8. [Équipe et déroulé du projet](#équipe-et-déroulé-du-projet)
+9. [Limites connues](#limites-connues)
 
-## Tech stack
+## Fonctionnalités
 
-| Part | Technology |
-|------|------------|
+- **Comptes** : inscription et connexion avec un email et un mot de passe. La connexion est conservée quand on
+  recharge la page.
+- **Parties** : création d'une partie, invitation de l'adversaire par email, liste de ses parties en cours, et
+  historique des parties terminées avec le résultat (victoire, défaite, nulle).
+- **Règles complètes** : tous les déplacements, échec, échec et mat, pat, roque, prise en passant, promotion du pion
+  et nulle par matériel insuffisant. Un coup qui laisse son propre roi en échec est impossible.
+- **Vrai multijoueur** : les couleurs sont tirées au sort au démarrage, les blancs jouent en premier, le plateau se
+  met à jour chez l'adversaire en moins d'une seconde, et on ne peut pas jouer hors de son tour.
+- **Fin de partie** : échec et mat, pat, nulle, abandon (bouton « Abandonner »), ou fin automatique si personne n'a
+  joué depuis une heure. Un message clair indique à chaque joueur s'il a gagné, perdu ou fait match nul.
+- **Aide** : une fenêtre « Comment jouer » en plusieurs étapes s'ouvre après la création d'un compte, et peut être
+  rouverte depuis la barre du haut.
+- **Confort** : le plateau est retourné pour que chacun joue depuis le bas, les pièces capturées s'affichent à côté
+  du plateau, les cases jouables sont indiquées, et l'interface s'adapte au mode clair/sombre et au mobile.
+
+## Technologies
+
+| Partie | Technologie |
+|--------|-------------|
 | Frontend | React 19, TypeScript, Vite, React Router |
-| State | React Context + `useReducer` (login), local component state (games) |
-| Backend | Deno server provided by the teacher (`server/`), SQLite database |
-| Quality | Type checking (`tsc`), linter (`oxlint`), 45 unit tests on the chess rules |
+| État | Context API + `useReducer` (connexion), état local des composants (parties) |
+| Backend | Serveur Deno fourni par le professeur (dossier `server/`), base SQLite |
+| Qualité | Vérification des types (`tsc`), linter (`oxlint`), 45 tests unitaires des règles |
 
-The backend is generic: it knows nothing about chess. It only stores the game as a free JSON text and decides who is
-allowed to write (only the player whose turn it is). **All the chess logic lives in the frontend**, in
-`client/src/game-logic/`.
+Le serveur est **générique** : il ne connaît rien aux échecs. Il stocke seulement la partie sous forme de texte JSON
+libre et décide qui a le droit d'écrire (uniquement le joueur dont c'est le tour). **Toute la logique des échecs est
+donc dans le frontend**, dans `client/src/game-logic/`.
 
-## Getting started
+La documentation de l'API du serveur est dans [`server/README.md`](./server/README.md), et une fois le serveur lancé
+sur http://localhost:8000/docs.
 
-Prerequisites: Node.js 22+ and Deno 2.9+.
+## Installation et lancement
+
+Prérequis : **Node.js 22 ou plus** et **Deno 2.9 ou plus**.
+
+Il faut lancer deux choses en même temps, dans deux terminaux.
+
+**Terminal 1 : le serveur** (http://localhost:8000)
 
 ```bash
-# 1. Backend (http://localhost:8000, API documentation on /docs)
 cd server
 deno task start
+```
 
-# 2. Frontend, in another terminal (http://localhost:5173)
+**Terminal 2 : l'application** (http://localhost:5173)
+
+```bash
 cd client
-npm install
+npm install        # seulement la première fois
 npm run dev
 ```
 
-Open http://localhost:5173. To try a full game alone, use two browser sessions (a normal window and a private
-window) with two different accounts.
+Ouvrir ensuite http://localhost:5173 dans le navigateur.
 
-## How to play
+Attention : les commandes `npm` se lancent **depuis le dossier `client/`**, pas depuis la racine du dépôt (c'est là
+que se trouve le `package.json`).
 
-1. **Sign up** (a short tutorial opens) or log in.
-2. Click **Créer une partie**, then **Créer la partie**. You land on the page of your new game.
-3. **Invite your opponent**: type the email he or she used to sign up (the account must already exist) and click
-   **Inviter**. The opponent is added immediately and sees the game in **Parties en cours**.
-4. When both players are in, the creator clicks **Démarrer la partie**. Colors are drawn at random.
-5. **Play**: click one of your pieces (dots show where it can go), then click a destination square. When a pawn
-   reaches the last row, choose the new piece in the window that opens.
-6. The game ends on checkmate, stalemate or draw. You can also click **Abandonner** during your turn. Finished games
-   are kept in **Historique**.
+## Comment jouer
 
-## Project structure
+1. **Créer un compte** (un petit tutoriel s'ouvre) ou se connecter.
+2. Cliquer sur **Créer une partie**, puis sur **Créer la partie**. On arrive sur la page de sa nouvelle partie.
+3. **Inviter son adversaire** : taper l'email qu'il a utilisé pour s'inscrire (son compte doit **déjà exister**) et
+   cliquer sur **Inviter**. Il est ajouté tout de suite et voit la partie dans **Parties en cours**.
+4. Quand les deux joueurs sont là, le créateur clique sur **Démarrer la partie**. Les couleurs sont tirées au sort.
+5. **Jouer** : cliquer sur une de ses pièces (des points montrent où elle peut aller), puis sur la case de
+   destination. Quand un pion arrive au bout du plateau, une fenêtre permet de choisir sa nouvelle pièce.
+6. La partie se termine par un échec et mat, un pat ou une nulle. On peut aussi cliquer sur **Abandonner** pendant
+   son tour. Les parties terminées restent consultables dans **Historique**.
 
-```
-client/                     React + TypeScript frontend
-  src/
-    api/                    Calls to the backend (auth, games)
-    components/             Navbar, tutorial window, waiting room
-      chess/                Board, square and piece display
-    context/                Login state shared by the whole application
-    game-logic/             The chess rules, independent from React
-      types.ts              Pieces, colors, board, moves
-      board.ts              Starting position
-      deplacements.ts       Where each piece can go
-      regles.ts             Check, checkmate, stalemate, castling, en passant, promotion
-      partie.ts             What is saved in the backend for a game
-    pages/                  Login, sign-up, my games, create game, game, history
-  tests/                    Unit tests of the chess rules
-server/                     Backend provided by the teacher (Deno + SQLite)
-```
-
-## How it works
-
-- A game is saved in the backend as a JSON text `state`: the board, which player has which color, whether each
-  castling is still allowed, the possible en passant square, and the time of the last move.
-- When you play a move, the page applies it with `jouerCoup`, checks whether the opponent is now checkmated or in
-  stalemate, and sends the new state to the server, which passes the turn to the opponent.
-- Each page of a running game asks the server for the game every second (there are no websockets on this
-  backend), and a small protection ignores a late answer so that a piece never jumps back on screen.
-- The same code decides which squares are proposed to the player and whether a move is legal, so an illegal move
-  cannot be played from the interface.
+**Pour essayer seul une partie complète**, il faut deux sessions séparées : une fenêtre normale et une fenêtre de
+navigation privée, avec deux comptes différents (la connexion est enregistrée dans le navigateur, donc deux
+onglets normaux partageraient le même compte).
 
 ## Tests
 
+### Lancer les tests unitaires
+
+Les tests vérifient toutes les règles des échecs, sans navigateur ni serveur. Depuis le dossier `client/` :
+
 ```bash
 cd client
-npm test          # 45 unit tests on the chess rules (castling, en passant, promotion, checkmate...)
-npm run lint      # code style, no warning
-npm run build     # type checking + production build
+npm install        # seulement la première fois
+npm test
 ```
 
-The full game flow (sign-up, invitation, a game played to checkmate, castling, en passant, promotion, resignation,
-history) was also checked by hand-written browser scripts against the real backend with two accounts.
+Résultat attendu : une ligne `OK` par test, puis la conclusion :
 
-## Team and work timeline
+```
+OK  Roque : petit roque blanc propose (g1)
+OK  En passant : le pion adverse est retire du plateau
+...
+TOUS LES 45 TESTS PASSENT
+```
 
-The work was split in vertical slices, one branch each, then merged into `feature/chess-game`, `Fusion` and `main`.
+Si un test échoue, il est affiché avec `KO`, la conclusion indique le nombre de tests en échec, et la commande
+se termine avec une erreur.
 
-| Slice | Content | Author |
-|-------|---------|--------|
-| Foundation | Project setup, API wrapper, login context, protected routes, navigation bar | Benji |
-| Authentication | Login and sign-up pages, first styles (navigation bar, forms) | lgabor |
-| Games management | First version of the game creation, games list and history pages | bvanchri |
-| Chess game | Chess rules, board, game page, backend connection, tests, tutorial, integration of the three slices, and rework of the games pages (automatic list, results in the history, direct creation) | Benji |
+**Comment ça marche** : la commande compile le fichier `client/tests/regles.test.ts` dans un dossier temporaire
+(`client/tests-build/`, ignoré par git) puis l'exécute avec Node. Aucun outil de test supplémentaire n'est nécessaire.
 
-Work was spread over several days, not done at the end: project start on 10/09, foundation on 15/09, chess engine
-started on 16/09, authentication and games pages on 21-22/09, integration of the three slices on 22-23/09, and
-special rules, tests, styling and documentation on 28/09.
+### Ce que les tests vérifient
 
-## Known limits and ideas
+| Thème | Exemples de cas testés |
+|-------|------------------------|
+| Position de départ | Nombre de coups d'un pion et d'un cavalier, pas d'échec ni de mat au départ |
+| Roque | Petit et grand roque des blancs et des noirs ; interdit si le roi est en échec, si une case traversée est attaquée, si une pièce gêne, si le droit est perdu (roi ou tour déjà bougé, tour capturée) ; autorisé si seule la case de la tour est attaquée |
+| Prise en passant | Possible uniquement au coup suivant ; le pion adverse est retiré ; interdite si elle expose son propre roi ; pas de fausse prise |
+| Promotion | Dame, tour, fou ou cavalier ; blancs et noirs ; avec capture ; impossible sur une case occupée |
+| Fin de partie | Mat du fou (4 coups), pat classique, matériel insuffisant (roi seul, roi + fou, roi + cavalier) |
 
-- The server does not check moves: all rules are checked by the client, so a modified client could cheat.
-- Resignation is only possible during your own turn, because the server only lets the player whose turn it is write.
-  For the same reason, a game abandoned by both players ends automatically after one hour, when the player whose turn
-  it is opens the page again.
-- No threefold repetition, fifty-move rule, clock or spectator mode.
-- The opponent must already have an account to be invited.
+### Ajouter un test
+
+Chaque test dessine une position avec un petit plateau en texte (majuscule = pièce blanche, minuscule = pièce noire,
+point = case vide), joue un coup, et vérifie le résultat :
+
+```ts
+const plateau = plateauDepuis([
+  "k.......",   // ligne 0 (haut) : roi noir en a8
+  "........",
+  "........",
+  "........",
+  "........",
+  "........",
+  "........",
+  "R...K..R",    // ligne 7 (bas) : tours et roi blancs
+]);
+const coups = getMouvementsLegaux(plateau, { ligne: 7, colonne: 4 }, creerContexteDeDepart());
+verifier("Roque : le petit roque est proposé", coups.some((c) => c.ligne === 7 && c.colonne === 6));
+```
+
+### Autres vérifications
+
+Depuis le dossier `client/` :
+
+```bash
+npm run lint       # qualité du code (aucun avertissement attendu)
+npm run build      # vérification des types TypeScript + construction de l'application
+```
+
+### Tester une partie complète à la main
+
+Avec deux sessions (fenêtre normale + navigation privée) et deux comptes, voici des parties courtes pour vérifier
+chaque règle. Les coups sont dans la notation habituelle des échecs ; la couleur de chacun est tirée au sort, donc
+il faut suivre les coups de la couleur qu'on a.
+
+| Règle à vérifier | Coups à jouer | Résultat attendu |
+|------------------|---------------|------------------|
+| Échec et mat | 1. f3 e5 2. g4 Dh4 | Les noirs gagnent : message « Échec et mat » des deux côtés, la partie apparaît dans l'historique |
+| Prise en passant | 1. e4 a6 2. e5 d5 3. exd6 | Le pion noir d5 disparaît après la prise |
+| Petit roque | 1. e4 e5 2. Cf3 Cc6 3. Fc4 Fc5 4. O-O | Le roi va en g1 et la tour en f1 |
+| Promotion | 1. h4 g5 2. hxg5 a6 3. g6 a5 4. gxh7 a4 5. hxg8 | Une fenêtre propose dame, tour, fou ou cavalier |
+| Abandon | Cliquer sur « Abandonner » pendant son tour | L'adversaire est déclaré vainqueur |
+
+## Structure du projet
+
+```
+client/                     Frontend React + TypeScript
+  src/
+    api/                    Appels au serveur (connexion, parties)
+    components/             Barre de navigation, fenêtre d'aide, salle d'attente
+      chess/                Affichage du plateau, des cases et des pièces
+    context/                Connexion partagée dans toute l'application
+    game-logic/             Les règles des échecs, indépendantes de React
+      types.ts              Pièces, couleurs, plateau, coups
+      board.ts              Position de départ
+      deplacements.ts       Où peut aller chaque pièce
+      regles.ts             Échec, mat, pat, roque, prise en passant, promotion
+      partie.ts             Ce qui est enregistré sur le serveur pour une partie
+    pages/                  Connexion, inscription, mes parties, création, partie, historique
+  tests/                    Tests unitaires des règles
+server/                     Serveur fourni par le professeur (Deno + SQLite)
+```
+
+## Fonctionnement technique
+
+- Une partie est enregistrée sur le serveur dans un texte JSON, le `state` : le plateau, la couleur de chaque
+  joueur, les roques encore permis, la case de prise en passant éventuelle, et l'heure du dernier coup.
+- Quand on joue un coup, la page l'applique avec `jouerCoup`, regarde si l'adversaire est maintenant mat ou pat,
+  puis envoie le nouvel état au serveur, qui donne le tour à l'adversaire.
+- Chaque page d'une partie en cours redemande la partie au serveur toutes les secondes (ce serveur n'a pas de
+  websockets). Une petite protection ignore une réponse arrivée en retard, pour qu'une pièce ne « revienne » jamais
+  en arrière à l'écran.
+- Le même code décide des cases proposées au joueur et de la légalité d'un coup : depuis l'interface, on ne peut pas
+  jouer un coup interdit.
+
+## Équipe et déroulé du projet
+
+Le travail a été découpé en lots verticaux, un par branche, puis fusionnés dans `feature/chess-game`, `Fusion` et
+`main`.
+
+| Lot | Contenu | Auteur |
+|-----|---------|--------|
+| Socle | Création du projet, appels au serveur, connexion, routes protégées, barre de navigation | Benji |
+| Authentification | Pages de connexion et d'inscription, premiers styles (barre de navigation, formulaires) | lgabor |
+| Gestion des parties | Première version de la création de partie, de la liste des parties et de l'historique | bvanchri |
+| Jeu d'échecs | Règles, plateau, page de partie, lien avec le serveur, tests, tutoriel, intégration des trois lots, reprise des pages de parties (liste automatique, résultat dans l'historique, création directe) | Benji |
+
+Le travail est réparti sur plusieurs jours, il n'a pas été fait à la fin : lancement du projet le 10/09, socle le 15/09,
+début du moteur d'échecs le 16/09, authentification et pages de parties les 21 et 22/09, intégration des trois lots
+les 22 et 23/09, puis coups spéciaux, tests, mise en forme et documentation le 28/09.
+
+## Limites connues
+
+- Le serveur ne vérifie pas les coups : toutes les règles sont vérifiées par le client, donc un client modifié
+  pourrait tricher (le serveur fourni est volontairement générique).
+- L'abandon n'est possible que pendant son propre tour, car le serveur n'autorise à écrire que le joueur dont c'est
+  le tour. Pour la même raison, une partie quittée par les deux joueurs se termine automatiquement au bout d'une
+  heure, quand le joueur dont c'est le tour rouvre la page.
+- Pas de nulle par triple répétition, pas de règle des 50 coups, pas de pendule, pas de mode spectateur.
+- L'adversaire doit déjà avoir un compte pour être invité.
