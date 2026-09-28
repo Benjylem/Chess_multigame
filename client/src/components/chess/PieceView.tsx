@@ -1,17 +1,13 @@
+// Affichage d'une pièce d'échecs sous forme de symbole (♜ ♞ ♚...).
+// Les deux couleurs utilisent les mêmes symboles pleins : c'est la couleur du texte
+// (voir App.css, classes piece-blanc et piece-noir) qui distingue les blancs des noirs.
+
 import type { Piece, TypePiece } from "../../game-logic/types";
 
-// Un symbole unicode different pour chaque piece, selon sa couleur
-const SYMBOLES_BLANC: Record<TypePiece, string> = {
-  pion: "♙",
-  tour: "♖",
-  cavalier: "♘",
-  fou: "♗",
-  dame: "♕",
-  roi: "♔",
-};
-
-const SYMBOLES_NOIR: Record<TypePiece, string> = {
-  pion: "♟",
+// Le symbole unicode de chaque type de pièce.
+// (Le ︎ après le pion demande un affichage en texte et non en émoji.)
+const SYMBOLES: Record<TypePiece, string> = {
+  pion: "♟︎",
   tour: "♜",
   cavalier: "♞",
   fou: "♝",
@@ -23,27 +19,7 @@ interface ProprietesPieceView {
   piece: Piece;
 }
 
+// Affiche une pièce sous forme de symbole (♟, ♞...) selon son type, coloré selon sa couleur.
 export function PieceView({ piece }: ProprietesPieceView) {
-  let symbole = SYMBOLES_NOIR[piece.type];
-  if (piece.couleur === "blanc") {
-    symbole = SYMBOLES_BLANC[piece.type];
-  }
-
-  const estBlanche = piece.couleur === "blanc";
-
-  return (
-    <span
-      style={{
-        fontSize: "2.2rem",
-        lineHeight: 1,
-        userSelect: "none",
-        color: estBlanche ? "#ffffff" : "#1a1a1a",
-        textShadow: estBlanche
-          ? "0 1px 2px rgba(156, 154, 154, 0.8)"
-          : "0 1px 1px rgba(255, 255, 255, 0.35)",
-      }}
-    >
-      {symbole}
-    </span>
-  );
+  return <span className={`piece piece-${piece.couleur}`}>{SYMBOLES[piece.type]}</span>;
 }

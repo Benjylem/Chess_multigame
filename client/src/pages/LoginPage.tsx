@@ -1,9 +1,12 @@
+// Page de connexion : formulaire email + mot de passe.
+
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { login } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 
+// Affiche le formulaire de connexion (redirige vers l'accueil si on est déjà connecté).
 export function LoginPage() {
   const { token, login: saveSession } = useAuth();
   const navigate = useNavigate();
@@ -14,6 +17,7 @@ export function LoginPage() {
 
   if (token) return <Navigate to="/" replace />;
 
+  // Envoie le formulaire au backend : en cas de succès on connecte le joueur, sinon on affiche l'erreur.
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -34,6 +38,7 @@ export function LoginPage() {
     <main className="auth-page">
       <section className="auth-panel" aria-labelledby="login-title">
         <h1 id="login-title">Connexion</h1>
+        <p className="auth-intro">Connecte-toi pour jouer aux échecs en ligne.</p>
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>
             Adresse email

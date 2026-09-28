@@ -1,3 +1,5 @@
+// Point d'entrée de l'application : lance React et fournit le routeur et la connexion à toutes les pages.
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
