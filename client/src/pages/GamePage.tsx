@@ -1,47 +1,29 @@
-// Lot 3 — page de jeu reelle (/games/:id), branchee sur le backend.
-// Remplace la page de test locale (src/dev/TestPlateau.tsx) une fois qu'on a
-// un vrai token + un vrai id de partie.
+// Page d'une partie (/games/:id). Selon l'état de la partie, elle affiche :
+//   - la salle d'attente (la partie n'a pas encore démarré),
+//   - le plateau (partie en cours), avec le bouton Abandonner,
+//   - le résultat (partie terminée).
+// Elle interroge le serveur chaque seconde pour voir le coup joué par l'adversaire.
 
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getGame, startGame, updateGameState } from "../api/games";
-import type { Game, User } from "../types";
-import type { Couleur, Plateau as PlateauDuJeu } from "../game-logic/types";
-import { creerPlateauDeDepart } from "../game-logic/board";
-import { couleurAdverse, estEchecEtMat, estPat } from "../game-logic/regles";
+import { getGame, markGameSeen, updateGameState } from "../api/games";
+import type { Game } from "../types";
+import type { Plateau as PlateauDuJeu } from "../game-logic/types";
+import { creerEtatApresCoup, getMessageDeFin, lireDonneesDeFin, lireEtat } from "../game-logic/partie";
+import type { DonneesDeFin, EtatPartie, Resultat } from "../game-logic/partie";
+import { couleurAdverse, estEchecEtMat, estEnEchec, estPat } from "../game-logic/regles";
 import { Plateau } from "../components/chess/Plateau";
+import { SalleDAttente } from "../components/SalleDAttente";
 
-// Pas de websocket sur ce backend : on reinterroge le serveur regulierement
-// pour voir le coup joue par l'adversaire.
-const INTERVALLE_POLLING_MS = 3000;
+// Pas de websocket sur ce backend : on redemande la partie au serveur toutes les secondes.
+const INTERVALLE_POLLING_MS = 1000;
 
-// Ce qui est stocke dans le champ `state` (chaine JSON libre) d'une partie
-// d'echecs : le plateau, et qui joue quelle couleur.
-interface EtatPartie {
-  plateau: PlateauDuJeu;
-  couleurs: Record<number, Couleur>;
-}
+// Si personne n'a joué depuis 1 heure, la partie est considérée comme abandonnée
+// et se termine automatiquement (dès que le joueur dont c'est le tour ouvre la page).
+const INACTIVITE_MAX_MS = 60 * 60 * 1000;
 
-// Ce qui est stocke dans `endData` a la fin d'une partie.
-interface DonneesDeFin {
-  resultat: "echecEtMat" | "pat";
-  gagnantId: number | null;
-}
-
-// Tire au hasard qui joue les blancs et qui joue les noirs.
-function tirerCouleursAuHasard(idJoueur1: number, idJoueur2: number): Record<number, Couleur> {
-  if (Math.random() < 0.5) {
-    return { [idJoueur1]: "blanc", [idJoueur2]: "noir" };
-  }
-  return { [idJoueur1]: "noir", [idJoueur2]: "blanc" };
-}
-
-// Renvoie l'autre joueur de la partie (celui qui n'a pas l'id donne).
-function getAdversaire(partie: Game, monId: number): User | undefined {
-  return partie.players.find((joueur) => joueur.id !== monId);
-}
-
+// Affiche la partie et gère les coups, l'abandon et la fin de partie.
 export function GamePage() {
   const { id } = useParams();
   const gameId = Number(id);
@@ -51,25 +33,38 @@ export function GamePage() {
   const [erreur, setErreur] = useState("");
   const [enCours, setEnCours] = useState(false);
 
+  // Pendant qu'on envoie un coup, on ignore les réponses de la lecture régulière :
+  // sinon une réponse arrivée en retard pourrait remettre l'ancien plateau à l'écran.
+  const envoiEnCours = useRef(false);
+  const numeroDeMiseAJour = useRef(0);
+  const finAutomatiqueTentee = useRef(false);
+
+  const estTerminee = partie?.status === "ended";
+
+  // Lit la partie sur le serveur toutes les secondes (sauf quand elle est terminée).
   useEffect(() => {
-    if (!token) {
+    if (!token || estTerminee) {
       return;
     }
 
     let annule = false;
 
-    async function chargerPartie() {
+    // Demande la partie au serveur et met l'écran à jour (sauf si un coup est en cours d'envoi).
+    const chargerPartie = async () => {
+      const numero = numeroDeMiseAJour.current;
       try {
-        const donnees = await getGame(token!, gameId);
-        if (!annule) {
-          setPartie(donnees);
+        const donnees = await getGame(token, gameId);
+        if (annule || envoiEnCours.current || numero !== numeroDeMiseAJour.current) {
+          return;
         }
+        setPartie(donnees);
+        setErreur("");
       } catch (err) {
         if (!annule) {
           setErreur(err instanceof Error ? err.message : "Impossible de charger la partie.");
         }
       }
-    }
+    };
 
     chargerPartie();
     const intervalle = setInterval(chargerPartie, INTERVALLE_POLLING_MS);
@@ -78,148 +73,165 @@ export function GamePage() {
       annule = true;
       clearInterval(intervalle);
     };
-  }, [token, gameId]);
+  }, [token, gameId, estTerminee]);
+
+  // Quand la partie est terminée, on la retire de "Mes parties" (elle reste dans l'historique).
+  useEffect(() => {
+    if (token && estTerminee) {
+      markGameSeen(token, gameId).catch(() => {});
+    }
+  }, [token, gameId, estTerminee]);
+
+  // Si la partie n'a pas bougé depuis trop longtemps et que c'est notre tour, on la termine
+  // (les deux joueurs sont partis). Seul le joueur dont c'est le tour a le droit d'écrire.
+  useEffect(() => {
+    if (!token || !partie || partie.status !== "started" || !partie.isYourTurn) {
+      return;
+    }
+    if (finAutomatiqueTentee.current) {
+      return;
+    }
+
+    const etat = lireEtat(partie.state);
+    if (!etat || !etat.dernierCoupLe || Date.now() - etat.dernierCoupLe < INACTIVITE_MAX_MS) {
+      return;
+    }
+
+    finAutomatiqueTentee.current = true;
+    const donneesDeFin: DonneesDeFin = { resultat: "inactivite", gagnantId: null };
+    updateGameState(token, partie.id, {
+      state: JSON.stringify(etat),
+      ended: true,
+      endData: JSON.stringify(donneesDeFin),
+    })
+      .then(setPartie)
+      .catch(() => {});
+  }, [token, partie]);
 
   if (!user || !token) {
     return <p>Chargement...</p>;
   }
 
-  if (erreur) {
-    return <p>{erreur}</p>;
-  }
-
   if (!partie) {
-    return <p>Chargement de la partie...</p>;
-  }
-
-  async function demarrerLaPartie() {
-    if (!token || !partie) {
-      return;
-    }
-
-    const [joueur1, joueur2] = partie.players;
-    const couleurs = tirerCouleursAuHasard(joueur1.id, joueur2.id);
-    const idBlanc = couleurs[joueur1.id] === "blanc" ? joueur1.id : joueur2.id;
-
-    const etatDepart: EtatPartie = { plateau: creerPlateauDeDepart(), couleurs };
-
-    setEnCours(true);
-    try {
-      const partieMiseAJour = await startGame(token, partie.id, {
-        state: JSON.stringify(etatDepart),
-        currentTurnUserId: idBlanc,
-      });
-      setPartie(partieMiseAJour);
-    } catch (err) {
-      setErreur(err instanceof Error ? err.message : "Impossible de démarrer la partie.");
-    } finally {
-      setEnCours(false);
-    }
-  }
-
-  async function surCoupJoue(nouveauPlateau: PlateauDuJeu) {
-    if (!token || !partie) {
-      return;
-    }
-
-    const etat: EtatPartie = JSON.parse(partie.state ?? "{}");
-    const maCouleur = etat.couleurs[user!.id];
-    const couleurDeLAdversaire = couleurAdverse(maCouleur);
-    const nouvelEtat: EtatPartie = { plateau: nouveauPlateau, couleurs: etat.couleurs };
-    const adversaire = getAdversaire(partie, user!.id);
-
-    setEnCours(true);
-    try {
-      let partieMiseAJour: Game;
-
-      if (estEchecEtMat(nouveauPlateau, couleurDeLAdversaire)) {
-        const donneesDeFin: DonneesDeFin = { resultat: "echecEtMat", gagnantId: user!.id };
-        partieMiseAJour = await updateGameState(token, partie.id, {
-          state: JSON.stringify(nouvelEtat),
-          ended: true,
-          endData: JSON.stringify(donneesDeFin),
-        });
-      } else if (estPat(nouveauPlateau, couleurDeLAdversaire)) {
-        const donneesDeFin: DonneesDeFin = { resultat: "pat", gagnantId: null };
-        partieMiseAJour = await updateGameState(token, partie.id, {
-          state: JSON.stringify(nouvelEtat),
-          ended: true,
-          endData: JSON.stringify(donneesDeFin),
-        });
-      } else if (adversaire) {
-        partieMiseAJour = await updateGameState(token, partie.id, {
-          state: JSON.stringify(nouvelEtat),
-          currentTurnUserId: adversaire.id,
-        });
-      } else {
-        return;
-      }
-
-      setPartie(partieMiseAJour);
-    } catch (err) {
-      setErreur(err instanceof Error ? err.message : "Impossible de jouer ce coup.");
-    } finally {
-      setEnCours(false);
-    }
+    return (
+      <main>
+        <p>{erreur || "Chargement de la partie..."}</p>
+        {erreur && <Link to="/">Retour à mes parties</Link>}
+      </main>
+    );
   }
 
   if (partie.status === "pending") {
-    const estCreateur = partie.creatorId === user.id;
-    const assezDeJoueurs = partie.players.length === 2;
+    return <SalleDAttente partie={partie} token={token} user={user} onPartieMiseAJour={setPartie} />;
+  }
 
+  const etat = lireEtat(partie.state);
+  if (!etat) {
     return (
-      <div style={{ padding: "1rem" }}>
-        <h1>Partie #{partie.id}</h1>
-        <p>
-          Les échecs se jouent à deux : chacun son tour, on déplace ses pièces pour essayer de
-          mettre le roi adverse en échec et mat. La couleur (blanc ou noir) sera tirée au sort
-          au démarrage de la partie.
-        </p>
-        <p>Joueurs inscrits : {partie.players.map((joueur) => joueur.email).join(", ")}</p>
-        {estCreateur && assezDeJoueurs && (
-          <button onClick={demarrerLaPartie} disabled={enCours}>
-            {enCours ? "Démarrage..." : "Démarrer la partie"}
-          </button>
-        )}
-        {estCreateur && !assezDeJoueurs && (
-          <p>Il faut exactement 2 joueurs pour démarrer une partie d'échecs.</p>
-        )}
-        {!estCreateur && <p>En attente que le créateur de la partie démarre la partie.</p>}
-      </div>
+      <main>
+        <p>L'état de cette partie est illisible.</p>
+        <Link to="/">Retour à mes parties</Link>
+      </main>
     );
   }
+
+  const maCouleur = etat.couleurs[user.id];
+  const adversaire = partie.players.find((joueur) => joueur.id !== user.id);
+
+  // Envoie une mise à jour au serveur en bloquant le plateau le temps de la réponse.
+  const envoyer = async (action: () => Promise<Game>) => {
+    envoiEnCours.current = true;
+    setEnCours(true);
+    setErreur("");
+    try {
+      setPartie(await action());
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : "Le serveur a refusé cette action.");
+    } finally {
+      numeroDeMiseAJour.current += 1;
+      envoiEnCours.current = false;
+      setEnCours(false);
+    }
+  };
+
+  // Termine la partie en enregistrant le résultat (echec et mat, pat, abandon...).
+  const terminerPartie = (nouvelEtat: EtatPartie, resultat: Resultat, gagnantId: number | null) => {
+    const donneesDeFin: DonneesDeFin = { resultat, gagnantId };
+    return updateGameState(token, partie.id, {
+      state: JSON.stringify(nouvelEtat),
+      ended: true,
+      endData: JSON.stringify(donneesDeFin),
+    });
+  };
+
+  // Appelée par le plateau quand le joueur joue un coup : on regarde si la partie se termine
+  // (échec et mat ou pat pour l'adversaire), sinon le tour passe à l'adversaire.
+  const surCoupJoue = (nouveauPlateau: PlateauDuJeu) => {
+    const nouvelEtat = creerEtatApresCoup(etat, nouveauPlateau);
+    const couleurDeLAdversaire = couleurAdverse(maCouleur);
+
+    if (estEchecEtMat(nouveauPlateau, couleurDeLAdversaire)) {
+      return envoyer(() => terminerPartie(nouvelEtat, "echecEtMat", user.id));
+    }
+    if (estPat(nouveauPlateau, couleurDeLAdversaire)) {
+      return envoyer(() => terminerPartie(nouvelEtat, "pat", null));
+    }
+    if (!adversaire) {
+      return;
+    }
+    return envoyer(() =>
+      updateGameState(token, partie.id, {
+        state: JSON.stringify(nouvelEtat),
+        currentTurnUserId: adversaire.id,
+      }),
+    );
+  };
+
+  // Le joueur abandonne : la partie se termine et son adversaire est déclaré vainqueur.
+  // (Le serveur n'autorise à écrire que le joueur dont c'est le tour, donc c'est seulement possible à son tour.)
+  const abandonner = () => {
+    if (!adversaire || !window.confirm("Abandonner la partie ? Ton adversaire sera déclaré vainqueur.")) {
+      return;
+    }
+    return envoyer(() => terminerPartie(etat, "abandon", adversaire.id));
+  };
 
   if (partie.status === "ended") {
-    const donneesDeFin: DonneesDeFin | null = partie.endData ? JSON.parse(partie.endData) : null;
-
-    let message = "Partie terminée.";
-    if (donneesDeFin?.resultat === "pat") {
-      message = "Partie nulle (pat) !";
-    } else if (donneesDeFin?.gagnantId === user.id) {
-      message = "Tu as gagné, échec et mat !";
-    } else if (donneesDeFin?.gagnantId !== undefined) {
-      message = "Tu as perdu, échec et mat.";
-    }
-
+    const message = getMessageDeFin(lireDonneesDeFin(partie.endData), user.id);
     return (
-      <div style={{ padding: "1rem" }}>
+      <main>
         <h1>Partie #{partie.id}</h1>
-        <p>{message}</p>
-      </div>
+        <p>
+          <strong>{message}</strong>
+        </p>
+        <Plateau
+          plateau={etat.plateau}
+          couleurQuiJoue={maCouleur}
+          interactif={false}
+          orientation={maCouleur}
+          onCoupJoue={() => {}}
+        />
+        <p>
+          <Link to="/">Retour à mes parties</Link> · <Link to="/history">Voir l'historique</Link>
+        </p>
+      </main>
     );
   }
 
-  // partie.status === "started"
-  const etat: EtatPartie = JSON.parse(partie.state ?? "{}");
-  const maCouleur = etat.couleurs[user.id];
-
+  // Ici, la partie est en cours.
   return (
-    <div style={{ padding: "1rem" }}>
+    <main>
       <h1>Partie #{partie.id}</h1>
-      <p>Tu joues les {maCouleur === "blanc" ? "blancs" : "noirs"}.</p>
       <p>
-        <strong>{partie.isYourTurn ? "C'est ton tour de jouer" : "En attente de l'adversaire"}</strong>
+        Tu joues les {maCouleur === "blanc" ? "blancs" : "noirs"}
+        {adversaire && <> contre {adversaire.email}</>}.
       </p>
+      <p>
+        <strong>{partie.isYourTurn ? "C'est ton tour de jouer" : "En attente de l'adversaire..."}</strong>
+      </p>
+      {partie.isYourTurn && estEnEchec(etat.plateau, maCouleur) && <p>Attention : ton roi est en échec !</p>}
+      {erreur && <p>{erreur}</p>}
+
       <Plateau
         plateau={etat.plateau}
         couleurQuiJoue={maCouleur}
@@ -227,6 +239,16 @@ export function GamePage() {
         orientation={maCouleur}
         onCoupJoue={surCoupJoue}
       />
-    </div>
+
+      <p>
+        <button onClick={abandonner} disabled={!partie.isYourTurn || enCours}>
+          Abandonner
+        </button>
+      </p>
+      {!partie.isYourTurn && <p>Tu pourras abandonner quand ce sera ton tour.</p>}
+      <p>
+        <Link to="/">Retour à mes parties</Link> (la partie continue)
+      </p>
+    </main>
   );
 }
