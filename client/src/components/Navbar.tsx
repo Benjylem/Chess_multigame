@@ -15,6 +15,9 @@ export function Navbar() {
 
   return (
     <nav>
+       <Link className="Navbar-link" to="/lobby">
+            Lobby
+          </Link>
       <Link className="Navbar-link" to="/">
         Parties en cours
       </Link>
@@ -36,6 +39,7 @@ export function Navbar() {
           <Link className="Navbar-link" to="/signup">
             Créer un compte
           </Link>
+         
         </>
       )}
     </nav>

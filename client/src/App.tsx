@@ -4,6 +4,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
 import './App.css'
+import GameLobbyPage from './pages/GameLobbyPage.tsx';
 
 // Placeholders temporaires : les vraies pages (Lot 1 = auth, Lot 2 = lobby/historique,
 // Lot 3 = plateau) seront ajoutées dans src/pages/ sur leurs branches respectives et
@@ -34,6 +35,9 @@ function App() {
             path="/games/:id"
             element={<Placeholder label="Partie" />}
           />
+          <Route
+            path="/lobby"
+            element={<GameLobbyPage />} />
         </Route>
       </Routes>
     </>
