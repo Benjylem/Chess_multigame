@@ -1,3 +1,6 @@
+// Déclare les pages de l'application et leur adresse (URL).
+// Les pages placées dans ProtectedRoute demandent d'être connecté.
+
 import { Routes, Route } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -7,9 +10,9 @@ import { CreateGame } from "./pages/CreateGame";
 import { MyGames } from "./pages/MyGames";
 import { History } from "./pages/History";
 import { GamePage } from "./pages/GamePage";
-import GameLobbyPage from "./pages/GameLobbyPage";
 import "./App.css";
 
+// Affiche la barre de navigation puis la page qui correspond à l'adresse demandée.
 function App() {
   return (
     <>
@@ -24,7 +27,6 @@ function App() {
           <Route path="/create-game" element={<CreateGame />} />
           <Route path="/history" element={<History />} />
           <Route path="/games/:id" element={<GamePage />} />
-          <Route path="/lobby" element={<GameLobbyPage />} />
         </Route>
       </Routes>
     </>
