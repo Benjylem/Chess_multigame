@@ -1,3 +1,5 @@
+// Construction du plateau de départ d'une partie d'échecs, et lecture d'une case.
+
 import type { Plateau, Couleur, Piece, TypePiece } from "./types";
 
 // Petit raccourci pour creer une piece sans repeter "{ type: ..., couleur: ... }" partout

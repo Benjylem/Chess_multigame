@@ -1,8 +1,10 @@
-// Lot 0 — wrapper fetch commun. Ajoute automatiquement le header Authorization
-// quand un token est passé, et transforme les erreurs HTTP en exceptions JS.
+// Fonction commune pour appeler le backend. Elle ajoute le token dans l'en-tête
+// Authorization quand on en donne un, et transforme les erreurs HTTP en exceptions JS.
 
 const BASE_URL = "http://localhost:8000";
 
+// Erreur levée quand le backend répond avec un code d'erreur (ex: 403 "pas ton tour").
+// Elle garde le code HTTP et le message renvoyé par le serveur.
 export class ApiError extends Error {
   status: number;
 
@@ -23,6 +25,8 @@ interface ReponseErreur {
   error: string;
 }
 
+// Envoie une requête au backend et renvoie la réponse déjà convertie depuis le JSON.
+// En cas d'erreur HTTP, lève une ApiError avec le message du serveur.
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, token } = options;
 

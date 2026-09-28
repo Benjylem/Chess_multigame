@@ -1,3 +1,6 @@
+// Une case du plateau d'échecs : elle affiche sa couleur, la pièce qui est dessus,
+// et un point quand un coup est possible sur cette case.
+
 import type { Piece } from "../../game-logic/types";
 import { PieceView } from "./PieceView";
 
@@ -9,6 +12,7 @@ interface ProprietesCase {
   onClic: () => void;
 }
 
+// Affiche une case du plateau : sa couleur, la pièce dessus, et un point si un coup y est possible.
 export function Case({ piece, estClaire, estSelectionnee, estJouable, onClic }: ProprietesCase) {
   let couleurDeFond = "#b58863"; // case sombre par defaut
   if (estClaire) {

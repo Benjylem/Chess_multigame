@@ -1,3 +1,6 @@
+// Calcul des déplacements possibles d'une pièce (là où elle peut aller),
+// sans encore tenir compte de la mise en échec du roi (voir regles.ts pour ça).
+
 import type { Deplacement, Piece, Plateau, Position } from "./types";
 import { getPieceA } from "./board";
 

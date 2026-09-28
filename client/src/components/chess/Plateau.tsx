@@ -1,3 +1,7 @@
+// Le plateau d'échecs : affiche les 64 cases, les pièces capturées sur les côtés,
+// et gère les clics du joueur (choisir une pièce, voir ses coups, jouer un coup).
+// Il ne connaît pas le réseau : c'est la page GamePage qui envoie les coups au serveur.
+
 import { useState } from "react";
 import type { Couleur, Piece, Plateau as PlateauDuJeu, Position, TypePiece } from "../../game-logic/types";
 import { getPieceA } from "../../game-logic/board";
@@ -23,6 +27,7 @@ interface ProprietesPlateau {
   onCoupJoue: (nouveauPlateau: PlateauDuJeu) => void;
 }
 
+// Dit si deux positions désignent la même case.
 function estMemeCase(a: Position, b: Position): boolean {
   return a.ligne === b.ligne && a.colonne === b.colonne;
 }
@@ -81,20 +86,24 @@ function PiecesCapturees({ pieces }: { pieces: Piece[] }) {
   );
 }
 
+// Affiche le plateau et gère les clics : choisir une pièce, voir ses coups possibles, jouer un coup.
 export function Plateau({ plateau, couleurQuiJoue, interactif, orientation, onCoupJoue }: ProprietesPlateau) {
   const [caseSelectionnee, setCaseSelectionnee] = useState<Position | null>(null);
   const [coupsPossibles, setCoupsPossibles] = useState<Position[]>([]);
 
+  // Annule la sélection en cours (plus de pièce choisie, plus de coups affichés).
   function deselectionner() {
     setCaseSelectionnee(null);
     setCoupsPossibles([]);
   }
 
+  // Choisit la pièce sur cette case et calcule les coups qu'elle a le droit de jouer.
   function selectionner(position: Position) {
     setCaseSelectionnee(position);
     setCoupsPossibles(getMouvementsLegaux(plateau, position));
   }
 
+  // Réagit à un clic sur une case : joue le coup si c'est une case possible, sinon choisit la pièce cliquée.
   function surClicCase(position: Position) {
     if (!interactif) {
       return;

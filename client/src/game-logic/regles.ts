@@ -1,3 +1,6 @@
+// Règles des échecs : échec, échec et mat, pat, et coups légaux
+// (un coup est légal s'il ne laisse pas son propre roi en échec).
+
 import type { Couleur, Plateau, Position } from "./types";
 import { getPieceA } from "./board";
 import { getMouvementsPossibles } from "./deplacements";

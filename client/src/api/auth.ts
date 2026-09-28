@@ -1,4 +1,5 @@
-// Lot 0 — appels API d'authentification (server/routes.md : POST /auth/signup, /auth/login)
+// Appels au backend pour l'authentification : création de compte et connexion.
+// Les deux renvoient un token (à garder pour les autres appels) et l'utilisateur.
 
 import { apiFetch } from "./client";
 import type { User } from "../types";
@@ -8,6 +9,7 @@ export interface AuthResponse {
   user: User;
 }
 
+// Crée un compte avec un email et un mot de passe, et connecte directement l'utilisateur.
 export function signup(email: string, password: string) {
   return apiFetch<AuthResponse>("/auth/signup", {
     method: "POST",
@@ -15,6 +17,7 @@ export function signup(email: string, password: string) {
   });
 }
 
+// Connecte un utilisateur qui a déjà un compte.
 export function login(email: string, password: string) {
   return apiFetch<AuthResponse>("/auth/login", {
     method: "POST",

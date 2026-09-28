@@ -1,3 +1,5 @@
+// Affichage d'une pièce d'échecs sous forme de symbole (♙ ♞ ♚...).
+
 import type { Piece, TypePiece } from "../../game-logic/types";
 
 // Un symbole unicode different pour chaque piece, selon sa couleur
@@ -23,6 +25,7 @@ interface ProprietesPieceView {
   piece: Piece;
 }
 
+// Affiche une pièce sous forme de symbole (♙, ♞...) selon son type et sa couleur.
 export function PieceView({ piece }: ProprietesPieceView) {
   let symbole = SYMBOLES_NOIR[piece.type];
   if (piece.couleur === "blanc") {
