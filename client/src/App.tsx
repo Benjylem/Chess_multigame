@@ -7,6 +7,7 @@ import { CreateGame } from "./pages/CreateGame";
 import { MyGames } from "./pages/MyGames";
 import { History } from "./pages/History";
 import { GamePage } from "./pages/GamePage";
+import GameLobbyPage from "./pages/GameLobbyPage";
 import "./App.css";
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
           <Route path="/create-game" element={<CreateGame />} />
           <Route path="/history" element={<History />} />
           <Route path="/games/:id" element={<GamePage />} />
+          <Route path="/lobby" element={<GameLobbyPage />} />
         </Route>
       </Routes>
     </>
