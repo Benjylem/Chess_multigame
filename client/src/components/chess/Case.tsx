@@ -12,7 +12,8 @@ interface ProprietesCase {
   onClic: () => void;
 }
 
-// Affiche une case du plateau : sa couleur, la pièce dessus, et un point si un coup y est possible.
+// Affiche une case du plateau : sa couleur, la pièce dessus, un point si un coup y est possible
+// (ou un anneau si ce coup capture une pièce).
 export function Case({ piece, estClaire, estSelectionnee, estJouable, onClic }: ProprietesCase) {
   let couleurDeFond = "#b58863"; // case sombre par defaut
   if (estClaire) {
@@ -37,7 +38,7 @@ export function Case({ piece, estClaire, estSelectionnee, estJouable, onClic }: 
       }}
     >
       {piece && <PieceView piece={piece} />}
-      {estJouable && (
+      {estJouable && !piece && (
         <div
           style={{
             position: "absolute",
@@ -45,6 +46,19 @@ export function Case({ piece, estClaire, estSelectionnee, estJouable, onClic }: 
             height: "25%",
             borderRadius: "50%",
             backgroundColor: "rgba(0, 0, 0, 0.35)",
+          }}
+        />
+      )}
+      {estJouable && piece && (
+        // Une pièce adverse peut être capturée : on l'entoure d'un anneau.
+        <div
+          style={{
+            position: "absolute",
+            width: "88%",
+            height: "88%",
+            borderRadius: "50%",
+            border: "5px solid rgba(0, 0, 0, 0.35)",
+            boxSizing: "border-box",
           }}
         />
       )}

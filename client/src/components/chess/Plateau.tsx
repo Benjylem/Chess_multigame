@@ -106,7 +106,7 @@ function getPiecesCapturees(plateau: PlateauDuJeu, couleur: Couleur): Piece[] {
 // cote du plateau. Reutilise simplement PieceView, sans case autour.
 function PiecesCapturees({ pieces }: { pieces: Piece[] }) {
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", width: "60px", gap: "2px" }}>
+    <div className="pieces-capturees">
       {pieces.map((piece, index) => (
         <PieceView key={index} piece={piece} />
       ))}
@@ -226,9 +226,9 @@ export function Plateau({
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "1rem" }}>
+      <div className="plateau-zone">
         <PiecesCapturees pieces={getPiecesCapturees(plateau, "blanc")} />
-        <div style={{ width: "480px", maxWidth: "100%" }}>{lignes}</div>
+        <div className="plateau-grille">{lignes}</div>
         <PiecesCapturees pieces={getPiecesCapturees(plateau, "noir")} />
       </div>
 
